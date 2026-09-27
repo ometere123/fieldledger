@@ -77,6 +77,7 @@ class EventConsensus(gl.contract.Contract):
         maximum_age = 0
         clause_requirements = {}
         clause_scopes = {}
+        clause_metrics = {}
         for link in ev['links']:
             record = gl.contract.get_at(self.agreements).view().get_version(link['id'], u256(int(link['version'])))
             assert record != ''
@@ -92,6 +93,7 @@ class EventConsensus(gl.contract.Contract):
                 allowed_clauses.append(ref)
                 clause_requirements[ref] = (clause['cause'],terms['policy']['evidenceStandards'],int(terms['policy']['maxEvidenceAgeMinutes']),scope)
                 clause_scopes[ref] = scope
+                clause_metrics[ref] = clause['metric']
             for exclusion in terms['policy'].get('exclusions',[]):
                 ref = terms['agreement']+':'+str(terms['version'])+':'+exclusion['id']
                 allowed_exclusions.append(ref)
@@ -229,7 +231,11 @@ class EventConsensus(gl.contract.Contract):
                     # An authorised external evidence source is corroboration,
                     # not a contractual responsibility assignment.
                     organisation = '' if domain == 'EXTERNAL' else x.get('responsible_org')
-                    return (x.get('event_type'),x.get('cause'),x.get('cause_class'),domain,organisation,sorted(x.get('clause_ids',[])),sorted(x.get('excluded_clause_ids',[])))
+                    # RECORD_ONLY clauses do not change the agreement effect;
+                    # validators may differ on whether to list them.
+                    clauses = sorted(ref for ref in x.get('clause_ids',[]) if clause_metrics[ref] != 'RECORD_ONLY')
+                    exclusions = sorted(ref for ref in x.get('excluded_clause_ids',[]) if any(clause_metrics[clause] != 'RECORD_ONLY' for clause in exclusion_applies_to[ref]))
+                    return (x.get('event_type'),x.get('cause'),x.get('cause_class'),domain,organisation,clauses,exclusions)
                 if substantive(leader) != substantive(own): return False
                 if leader['cause'] != 'UNDETERMINED' and any(abs(a-b) > MAX_VALIDATOR_INTERVAL_VARIANCE_MINUTES for a,b in zip(intervals[0],intervals[1])): return False
                 return True

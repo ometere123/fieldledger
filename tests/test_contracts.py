@@ -311,6 +311,7 @@ def test_consensus_substantive_validator_and_hostile_package(mode):
     term={'agreement':'A1','version':1,'operator':'OP','counterparty':'SP','accepted':True,'policy':json.loads(policy())}
     term['policy']['causalTaxonomy']=['MAINTENANCE_DEFICIENCY','EXTERNAL_CAUSE','UNDETERMINED']
     term['policy']['clauses'].append({'id':'utility_record','cause':'EXTERNAL_CAUSE','metric':'RECORD_ONLY','threshold':0,'rate':0,'cap':0,'text':'Record corroborated external causes.'})
+    term['policy']['clauses'].append({'id':'maintenance_record','cause':'MAINTENANCE_DEFICIENCY','metric':'RECORD_ONLY','threshold':0,'rate':0,'cap':0,'text':'Record maintenance findings.'})
     term['policy']['exclusions']=[{'id':'planned_window','cause':'MAINTENANCE_DEFICIENCY','text':'Pre-approved maintenance window','appliesToClauses':['credit']}]
     documents=[];bytes_by_digest={}
     extra=([('E3','LAB','LAB','Unrelated report')] if mode=='one_bad' else [(f'E{i}','LAB','LAB','Adjudication facts') for i in range(3,10)] if mode=='budget' else [(f'E{i}','LAB','LAB','Measured trend') for i in range(3,12)] if mode=='bytes_budget' else [])
@@ -371,6 +372,11 @@ def test_consensus_substantive_validator_and_hostile_package(mode):
              validator_external=dict(external,responsible_org='LAB')
              with patch.object(gl.nondet,'exec_prompt',return_value=validator_external):
                 assert validate(gl.vm.Return(json.dumps(external)))
+             record_only=dict(finding,clause_ids=['A1:1:maintenance_record'],clause_evidence={'A1:1:maintenance_record':['E1','E2']})
+             with patch.object(gl.nondet,'exec_prompt',return_value=dict(record_only,clause_ids=[],clause_evidence={})):
+                assert validate(gl.vm.Return(json.dumps(record_only)))
+             with patch.object(gl.nondet,'exec_prompt',return_value=dict(finding,clause_ids=[],clause_evidence={})):
+                assert not validate(gl.vm.Return(json.dumps(finding)))
              with patch.object(gl.nondet,'exec_prompt',return_value=dict(finding,cause='CONTROL_SYSTEM_FAILURE')):
                 assert not validate(gl.vm.Return(json.dumps(dict(finding,cause='CONTROL_SYSTEM_FAILURE'))))
              with patch.object(gl.nondet,'exec_prompt',return_value=dict(finding,start_minute=-1)):
