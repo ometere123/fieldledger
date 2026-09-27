@@ -309,7 +309,8 @@ def test_consensus_substantive_validator_and_hostile_package(mode):
     gl = sys.modules[c.__class__.__module__].gl
     base={'id':'EV1','operator':'OP','asset':'K401','eventType':'UNIT_TRIP','eventTypeClaims':[{'organisation':'OP','eventType':'UNIT_TRIP','reportedMinute':100}],'partyRoles':{'OP':'OPERATOR','SP':'SERVICE_PROVIDER'},'sourceScopes':{'OP':['A1:1'],'SP':['A1:1'],'LAB':['A1:1']},'externalSources':['LAB'],'parties':['OP','SP'],'links':[{'id':'A1','version':1}], 'finalResult':'','intervalStartMin':0,'intervalEndMax':1000,'openedMinute':int(__import__('datetime').datetime(2026,9,26,10,0,tzinfo=__import__('datetime').timezone.utc).timestamp()//60),'closeAfter':'2026-09-28T10:00:00+00:00'}
     term={'agreement':'A1','version':1,'operator':'OP','counterparty':'SP','accepted':True,'policy':json.loads(policy())}
-    term['policy']['causalTaxonomy']=['MAINTENANCE_DEFICIENCY','UNDETERMINED']
+    term['policy']['causalTaxonomy']=['MAINTENANCE_DEFICIENCY','EXTERNAL_CAUSE','UNDETERMINED']
+    term['policy']['clauses'].append({'id':'utility_record','cause':'EXTERNAL_CAUSE','metric':'RECORD_ONLY','threshold':0,'rate':0,'cap':0,'text':'Record corroborated external causes.'})
     term['policy']['exclusions']=[{'id':'planned_window','cause':'MAINTENANCE_DEFICIENCY','text':'Pre-approved maintenance window','appliesToClauses':['credit']}]
     documents=[];bytes_by_digest={}
     extra=([('E3','LAB','LAB','Unrelated report')] if mode=='one_bad' else [(f'E{i}','LAB','LAB','Adjudication facts') for i in range(3,10)] if mode=='budget' else [(f'E{i}','LAB','LAB','Measured trend') for i in range(3,12)] if mode=='bytes_budget' else [])
@@ -366,6 +367,10 @@ def test_consensus_substantive_validator_and_hostile_package(mode):
              alternate_code=dict(finding,cause_code='OVERDUE_MAINTENANCE',contributing_codes=['OVERDUE_MAINTENANCE','LUBRICATION_DEGRADATION'])
              with patch.object(gl.nondet,'exec_prompt',return_value=alternate_code):
                 assert validate(gl.vm.Return(json.dumps(finding)))
+             external=dict(finding,cause='EXTERNAL_CAUSE',cause_class='EXTERNAL_CAUSE',cause_code='UTILITY_INTERRUPTION',contributing_codes=['UTILITY_INTERRUPTION'],responsible_domain='EXTERNAL',responsible_org='',clause_ids=['A1:1:utility_record'],clause_evidence={'A1:1:utility_record':['E1','E2']})
+             validator_external=dict(external,responsible_org='LAB')
+             with patch.object(gl.nondet,'exec_prompt',return_value=validator_external):
+                assert validate(gl.vm.Return(json.dumps(external)))
              with patch.object(gl.nondet,'exec_prompt',return_value=dict(finding,cause='CONTROL_SYSTEM_FAILURE')):
                 assert not validate(gl.vm.Return(json.dumps(dict(finding,cause='CONTROL_SYSTEM_FAILURE'))))
              with patch.object(gl.nondet,'exec_prompt',return_value=dict(finding,start_minute=-1)):

@@ -224,7 +224,12 @@ class EventConsensus(gl.contract.Contract):
                 # they do not select agreement consequences. Require each
                 # validator's code to be valid for the canonical cause above,
                 # while comparing the shared cause and consequence-bearing facts.
-                substantive = lambda x:(x.get('event_type'),x.get('cause'),x.get('cause_class'),x.get('responsible_domain'),x.get('responsible_org'),sorted(x.get('clause_ids',[])),sorted(x.get('excluded_clause_ids',[])))
+                def substantive(x):
+                    domain = x.get('responsible_domain')
+                    # An authorised external evidence source is corroboration,
+                    # not a contractual responsibility assignment.
+                    organisation = '' if domain == 'EXTERNAL' else x.get('responsible_org')
+                    return (x.get('event_type'),x.get('cause'),x.get('cause_class'),domain,organisation,sorted(x.get('clause_ids',[])),sorted(x.get('excluded_clause_ids',[])))
                 if substantive(leader) != substantive(own): return False
                 if leader['cause'] != 'UNDETERMINED' and any(abs(a-b) > MAX_VALIDATOR_INTERVAL_VARIANCE_MINUTES for a,b in zip(intervals[0],intervals[1])): return False
                 return True
