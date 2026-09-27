@@ -1,0 +1,23 @@
+# Hostile review notes
+
+The complete seven-page GenLayer Project Review Criteria PDF was inspected. It requires scoring only from observable code, deployed contracts and live application behavior; missing evidence counts against the project, and mocked contract integration cannot be presented as live.
+
+## Protocol review
+
+| Attack surface | Current control in source | Verified evidence | Remaining proof |
+| --- | --- | --- | --- |
+| Manifest flooding | 4 KiB / 10 facts per item, bounded 24-item event, deterministic party/external slot quotas | Direct Mode capacity tests, deployed EvidenceRegistry, four live evidence commitments | Adversarial live saturation and worst-case fee measurement |
+| Agreement authority | Accepted agreement versions determine party, asset, source and policy scope | 24 Direct Mode tests; five live proposals and independent acceptances | Live consequence behavior across the five scopes |
+| Event framing | Either accepted party may originate; one bounded counterparty time/type challenge; shared physical interval | Direct Mode event tests, live event opening and finalized counterparty challenge | More live originator/challenge scenarios |
+| Cause/responsibility mismatch | Validators check cause taxonomy, event-type claim, responsible party/domain, canonical interval and per-clause evidence scope | Direct Mode validator attacks including source failure, contradiction, stale data and metadata mismatch | Live semantic decision and appeal |
+| Evidence manipulation | Evidence package metadata and digest are checked; each clause is checked against its agreement/version scope | Direct Mode digest/scope tests, four finalized commitments, Supabase-backed Worker ingestion and public R2 digest/size verification | Determination-time live fetch |
+| Child delivery failure | Result is stored before child delivery; retry cannot replace the determination | Source and Direct Mode checks | Successful child message, underfunded delivery and redelivery receipts |
+| Fee safety | Browser writes require a chain-matched measured profile and successful finalized receipt | Deployment and 21 live method receipts; UI smoke uses mocks | Close, determination, appeal, child-message and worst-case fee measurements |
+
+## Verification and live results
+
+`npm run check` passed (46 JavaScript tests, typecheck, Next build and Python compilation). The v0.6 Direct Mode suite passed 24/24, GenVM lint passed all six contracts, all six Studio Dev schemas were retrieved, and both browser smoke flows passed. The configured UI smoke uses mock wallet and gateway services.
+
+All six Studio Dev deployments returned `FINALIZED` and `FINISHED_WITH_RETURN`. Explorer consensus data showed that the earlier failed method writes carried `"method"` instead of the GenVM v0.6 required empty-string method key. Those exact payloads match the legacy writer in CLI 0.40.0-rc2. After upgrading to 0.40.0-rc.3, a corrected `EventRegistry.bind_consensus` call finalized with `FINISHED_WITH_RETURN`, 5/5 votes revealed, `SUCCESS`, changed contract-state hash, and 250,000,000 wei storage use. Its deposit was 0.175000000000112794 GEN, settled spend 78,628,250,000,823 wei, refund 174,921,371,750,111,971 wei. This resolves the encoding defect and confirms the binding call succeeded. Five corrected ParticipantRegistry registrations, five proposals, five independent acceptances, the shared event, its counterparty challenge and four evidence commitments have since finalized on Studio Dev. The Studio Dev `trace` method remains unavailable, but Explorer's full consensus data was sufficient to inspect the rejected payload. Twenty-one successful live app-method receipts cover registration, proposal, acceptance, event open/challenge and four evidence submissions. Close, determination, appeal, child delivery/recovery, obligation and representative worst-case fees remain unmeasured, so browser writes remain disabled.
+
+The actual app is deployed at [fieldledger-sage.vercel.app](https://fieldledger-sage.vercel.app); the production Worker accepts its CORS origin. Supabase is provisioned and the deployed Worker ingested all four already-committed packages; public objects passed digest and size verification. There is still no live determination, appeal, child message or obligation effect. The fee profile remains unmeasured. `determine` and `redeliver` now carry current-price child-fee quotes with 20% headroom; that quote must still be validated against successful finalized child receipts before the profile can be marked measured or browser writes enabled. See [READINESS.md](READINESS.md) and [DEPLOYMENT.md](DEPLOYMENT.md).

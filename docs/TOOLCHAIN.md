@@ -1,0 +1,7 @@
+# GenLayer toolchain and network
+
+The app targets Consensus v0.6 on Studio Dev, chain 61997 (`https://studio-dev.genlayer.com/api`) and the matching explorer (`https://explorer-studio-dev.genlayer.com/`). It pins `genlayer-js` 2.0.0-rc.1 and Transaction Kit 0.1.0-rc.2 in npm, and Python Direct Mode uses the matching `genlayer-test` 0.30.0rc2 / `genlayer-py` 0.19.0rc2 prerelease family. These are prerelease packages; re-check the official migration instructions before upgrading them as a set.
+
+The GenLayer CLI is installed separately. The verified CLI version is 0.40.0-rc.3; it includes a built-in `studio-dev` preset. The previous 0.40.0-rc2 installation did not include that preset, so its custom alias was removed from the user's CLI config before selecting the built-in network. `genlayer network info` now reports the built-in profile with RPC `https://studio-dev.genlayer.com/api`, chain ID 61997, and consensus main address `0xb7278A61aa25c888815aFC32Ad3cC52fF24fE575`. The Studio Dev RPC's `sim_getConsensusContract("ConsensusMain")` returns that same address and its ABI. The browser uses the SDK's `studioDevnet` chain object. Studio Dev is not Studionet (61999).
+
+`apps/web/public/fee-profile.json` must have `status: measured` and `chainId: 61997` before browser writes are enabled. Simulated or bootstrap allocations are not measurements. The app obtains a fresh Transaction Kit quote, blocks an unverified live fee-policy quote, requests the signature, and waits for FINALIZED plus FINISHED_WITH_RETURN.

@@ -1,0 +1,246 @@
+{
+  "synthetic": true,
+  "agreements": [
+    {
+      "id": "MNT-2026-04",
+      "operator": "OP-WR",
+      "counterparty": "MNT-SP",
+      "version": 1,
+      "policy": {
+        "type": "MAINTENANCE_SLA",
+        "mode": "ENFORCE",
+        "assets": [
+          "K-401B"
+        ],
+        "maxEvidenceAgeMinutes": 43200,
+        "evidenceStandards": [
+          "HISTORIAN",
+          "CMMS",
+          "INSPECTION"
+        ],
+        "clauses": [
+          {
+            "id": "service_credit",
+            "cause": "MAINTENANCE_DEFICIENCY",
+            "metric": "CREDIT_PER_MINUTE",
+            "threshold": 120,
+            "rate": 25000,
+            "cap": 10000000,
+            "text": "After the first 120 qualifying downtime minutes, accrue 25,000 synthetic credit units per minute up to the agreed cap."
+          },
+          {
+            "id": "operator_isolation",
+            "cause": "OPERATOR_CAUSED",
+            "metric": "RECORD_ONLY",
+            "threshold": 0,
+            "rate": 0,
+            "cap": 0,
+            "text": "Record operator controlled isolation without a service-provider credit."
+          }
+        ],
+        "exclusions": [
+          {
+            "id": "agreed_maintenance_window",
+            "cause": "MAINTENANCE_DEFICIENCY",
+            "appliesToClauses": [
+              "service_credit"
+            ],
+            "text": "Pre-authorised planned maintenance window excludes service credit if corroborated by signed schedule and work order."
+          }
+        ],
+        "causalTaxonomy": [
+          "MAINTENANCE_DEFICIENCY",
+          "OPERATOR_CAUSED",
+          "PLANNED_MAINTENANCE",
+          "CONTROL_SYSTEM_FAILURE",
+          "UNDETERMINED"
+        ],
+        "evidenceWindowMinutes": 2880,
+        "intervalLeadMinutes": 120,
+        "maxEventDurationMinutes": 43200,
+        "externalSources": [
+          "INSPECTOR-1"
+        ]
+      }
+    },
+    {
+      "id": "AVL-2026-02",
+      "operator": "OP-WR",
+      "counterparty": "MNT-SP",
+      "version": 1,
+      "policy": {
+        "type": "AVAILABILITY",
+        "mode": "OBSERVE",
+        "assets": [
+          "K-401B"
+        ],
+        "maxEvidenceAgeMinutes": 43200,
+        "evidenceStandards": [
+          "HISTORIAN",
+          "OPC_UA"
+        ],
+        "clauses": [
+          {
+            "id": "quarter_availability",
+            "cause": "MAINTENANCE_DEFICIENCY",
+            "metric": "AVAILABILITY_BPS",
+            "threshold": 0,
+            "rate": 2,
+            "cap": 10000,
+            "text": "Reduce observed availability by two basis points per qualifying downtime minute for this reference period."
+          }
+        ],
+        "exclusions": [],
+        "causalTaxonomy": [
+          "MAINTENANCE_DEFICIENCY",
+          "OPERATOR_CAUSED",
+          "PROCESS_UPSET",
+          "POWER_UTILITY_FAILURE",
+          "UNDETERMINED"
+        ],
+        "evidenceWindowMinutes": 2880,
+        "intervalLeadMinutes": 120,
+        "maxEventDurationMinutes": 43200,
+        "externalSources": [
+          "INSPECTOR-1"
+        ]
+      }
+    },
+    {
+      "id": "OEM-2025-11",
+      "operator": "OP-WR",
+      "counterparty": "OEM-K",
+      "version": 1,
+      "policy": {
+        "type": "WARRANTY",
+        "mode": "OBSERVE",
+        "assets": [
+          "K-401B"
+        ],
+        "maxEvidenceAgeMinutes": 86400,
+        "evidenceStandards": [
+          "OEM",
+          "LAB",
+          "INSPECTION"
+        ],
+        "clauses": [
+          {
+            "id": "defect_referral",
+            "cause": "EQUIPMENT_DEFECT",
+            "metric": "WARRANTY_FLAG",
+            "threshold": 0,
+            "rate": 0,
+            "cap": 1,
+            "text": "Flag a verified equipment defect for warranty review; this does not adjudicate a monetary warranty claim."
+          },
+          {
+            "id": "workmanship_review",
+            "cause": "MAINTENANCE_DEFICIENCY",
+            "metric": "WARRANTY_FLAG",
+            "threshold": 0,
+            "rate": 0,
+            "cap": 1,
+            "text": "Refer maintenance workmanship effect for warranty review without presuming a manufacturing defect."
+          }
+        ],
+        "exclusions": [],
+        "causalTaxonomy": [
+          "MAINTENANCE_DEFICIENCY",
+          "EQUIPMENT_DEFECT",
+          "OEM_MANUFACTURING_DEFECT",
+          "INSTRUMENTATION_FAILURE",
+          "UNDETERMINED"
+        ],
+        "evidenceWindowMinutes": 2880,
+        "intervalLeadMinutes": 120,
+        "maxEventDurationMinutes": 43200,
+        "externalSources": [
+          "INSPECTOR-1"
+        ]
+      }
+    },
+    {
+      "id": "JV-2026-07",
+      "operator": "OP-WR",
+      "counterparty": "JV-PARTNER",
+      "version": 1,
+      "policy": {
+        "type": "JV_ALLOCATION",
+        "mode": "ENFORCE",
+        "assets": [
+          "K-401B"
+        ],
+        "maxEvidenceAgeMinutes": 43200,
+        "evidenceStandards": [
+          "HISTORIAN",
+          "ERP"
+        ],
+        "clauses": [
+          {
+            "id": "cost_share",
+            "cause": "MAINTENANCE_DEFICIENCY",
+            "metric": "JV_SHARE_BPS",
+            "threshold": 0,
+            "rate": 2500,
+            "cap": 2500,
+            "text": "Record a 25 percent allocation share for qualifying maintenance-related downtime costs, subject to external invoicing."
+          }
+        ],
+        "exclusions": [],
+        "causalTaxonomy": [
+          "MAINTENANCE_DEFICIENCY",
+          "EXTERNAL_CAUSE",
+          "POWER_UTILITY_FAILURE",
+          "FORCE_MAJEURE",
+          "UNDETERMINED"
+        ],
+        "evidenceWindowMinutes": 2880,
+        "intervalLeadMinutes": 120,
+        "maxEventDurationMinutes": 43200,
+        "externalSources": [
+          "INSPECTOR-1"
+        ]
+      }
+    },
+    {
+      "id": "REF-2026-01",
+      "operator": "OP-WR",
+      "counterparty": "INSPECTOR-1",
+      "version": 1,
+      "policy": {
+        "type": "REFERENCE",
+        "mode": "OBSERVE",
+        "assets": [
+          "K-401B"
+        ],
+        "maxEvidenceAgeMinutes": 43200,
+        "evidenceStandards": [
+          "INSPECTION",
+          "LAB"
+        ],
+        "clauses": [
+          {
+            "id": "inspection_reference",
+            "cause": "MAINTENANCE_DEFICIENCY",
+            "metric": "RECORD_ONLY",
+            "threshold": 0,
+            "rate": 0,
+            "cap": 0,
+            "text": "Retain independently verified inspection finding as a reference effect."
+          }
+        ],
+        "exclusions": [],
+        "causalTaxonomy": [
+          "MAINTENANCE_DEFICIENCY",
+          "THIRD_PARTY_DAMAGE",
+          "FEEDSTOCK_OFFSPEC",
+          "UNDETERMINED"
+        ],
+        "evidenceWindowMinutes": 4320,
+        "intervalLeadMinutes": 120,
+        "maxEventDurationMinutes": 43200,
+        "externalSources": []
+      }
+    }
+  ]
+}

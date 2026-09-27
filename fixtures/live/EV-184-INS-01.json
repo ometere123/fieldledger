@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "eventId": "FL-2026-184",
+  "evidenceId": "EV-184-INS-01",
+  "organisation": "INSPECTOR-1",
+  "type": "INSPECTION",
+  "observedAt": "2026-09-26T23:50:00Z",
+  "source": "Synthetic independent inspection record",
+  "facts": [
+    { "field": "inspection_id", "value": "INSP-184-01" },
+    { "field": "asset", "value": "K-401B" },
+    { "field": "filter_condition", "value": "Collapsed pleated element and abnormal differential pressure observed" },
+    { "field": "external_damage", "value": "No external impact or third-party damage observed" }
+  ],
+  "redactions": ["inspector identity details"]
+}

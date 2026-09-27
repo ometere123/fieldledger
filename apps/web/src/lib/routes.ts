@@ -1,0 +1,3 @@
+export const slugToSection:Record<string,string>={events:'Operational events',assets:'Assets',agreements:'Agreements',evidence:'Evidence',determinations:'Determinations',effects:'Commercial effects',organisations:'Organisations',audit:'Audit & verification'};
+export const sectionToPath:Record<string,string>={Overview:'/',...Object.fromEntries(Object.entries(slugToSection).map(([slug,label])=>[label,`/${slug}`]))};
+export function routeContext(path:string){const parts=path.split('/').filter(Boolean);if(parts[0]==='events'&&parts[1])return {section:'Operational events',eventId:decodeURIComponent(parts[1])};return {section:slugToSection[parts[0]]||'Overview',eventId:null};}

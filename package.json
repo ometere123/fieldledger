@@ -1,0 +1,38 @@
+{
+  "name": "fieldledger",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev apps/web",
+    "build": "next build apps/web",
+    "start": "next start apps/web",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "worker:dev": "wrangler dev --config services/gateway/wrangler.jsonc",
+    "worker:deploy": "wrangler deploy --keep-vars --config services/gateway/wrangler.jsonc",
+    "contracts:check": "python3 -m compileall -q contracts",
+    "check": "npm run typecheck && npm test && npm run build && npm run contracts:check",
+    "test:e2e": "node tests/browser-smoke.mjs",
+    "test:live-ui": "node tests/live-ui-smoke.mjs"
+  },
+  "dependencies": {
+    "@genlayer/transaction-kit": "0.1.0-rc.2",
+    "genlayer-js": "2.0.0-rc.1",
+    "lucide-react": "0.468.0",
+    "next": "16.3.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "zod": "3.24.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "4.20260702.1",
+    "@types/node": "22.19.0",
+    "@types/react": "19.2.0",
+    "@types/react-dom": "19.2.0",
+    "playwright": "^1.55.1",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4",
+    "wrangler": "4.42.2"
+  }
+}

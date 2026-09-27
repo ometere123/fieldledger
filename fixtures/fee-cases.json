@@ -1,0 +1,14 @@
+{
+  "formatVersion": 1,
+  "network": "studio-dev",
+  "chainId": 61997,
+  "status": "fixture-only-requires-contract-deployment",
+  "notice": "Illustrative bounded transaction shapes for fee simulation; no live deployment or fee measurement is claimed. Replace contract addresses and argument values from a real deployment before running profile-fees.mjs simulate.",
+  "cases": [
+    { "name": "open-event-small", "contract": "events", "method": "open_event", "args": ["EVT-FEE-SMALL", "ASSET-1", "ORG-OP", "UNIT_TRIP", 0, "[]"] },
+    { "name": "evidence-small", "contract": "evidence", "method": "submit", "args": ["EVT-FEE-SMALL", "EV-1", "ORG-OP", "SCADA", 0, "https://example.invalid/evidence/sha256", "0000000000000000000000000000000000000000000000000000000000000000", 0, 1] },
+    { "name": "close-window", "contract": "evidence", "method": "close_window", "args": ["EVT-FEE-SMALL"] },
+    { "name": "determine-small", "contract": "consensus", "method": "determine", "args": ["EVT-FEE-SMALL"] },
+    { "name": "apply-small", "contract": "obligations", "method": "apply", "args": ["EVT-FEE-SMALL", "AGR-1", 1] }
+  ]
+}

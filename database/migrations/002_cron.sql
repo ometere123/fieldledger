@@ -1,0 +1,4 @@
+-- Optional database-only maintenance. Enable pg_cron through Supabase dashboard first.
+-- This refreshes no verdict, cause, finality or commercial effect.
+-- select cron.schedule('fieldledger-notification-retention','0 2 * * *',
+--   $$delete from notifications where read_at < now() - interval '180 days'$$);

@@ -1,0 +1,146 @@
+{
+  "version": 3,
+  "network": "studio-dev",
+  "chainId": 61997,
+  "status": "unmeasured",
+  "generatedAt": "2026-09-26T22:13:24.254Z",
+  "feePolicy": {
+    "enabled": true,
+    "genPerTimeUnit": "1",
+    "storageUnitPrice": "250000000",
+    "receiptGasPrice": "250000000",
+    "executionBudgetFloor": "76548000000000",
+    "timeUnitOverlayBps": "1500"
+  },
+  "bootstrapQuote": {
+    "feeValue": "175000000000112794"
+  },
+  "deploy": {
+    "leaderTimeunitsAllocation": "100",
+    "validatorTimeunitsAllocation": "200",
+    "executionBudgetPerRound": "25000000000000000",
+    "totalMessageFees": "0",
+    "rotationsPerRound": "0"
+  },
+  "methods": {
+    "bind_consensus": {
+      "leaderTimeunitsAllocation": "100",
+      "validatorTimeunitsAllocation": "200",
+      "executionBudgetPerRound": "25000000000000000",
+      "totalMessageFees": "0",
+      "rotationsPerRound": "0"
+    },
+    "register": {
+      "leaderTimeunitsAllocation": "100",
+      "validatorTimeunitsAllocation": "200",
+      "executionBudgetPerRound": "25000000000000000",
+      "totalMessageFees": "0",
+      "rotationsPerRound": "0"
+    },
+    "rotate_signer": {
+      "leaderTimeunitsAllocation": "100",
+      "validatorTimeunitsAllocation": "200",
+      "executionBudgetPerRound": "25000000000000000",
+      "totalMessageFees": "0",
+      "rotationsPerRound": "0"
+    },
+    "propose_version": {
+      "leaderTimeunitsAllocation": "100",
+      "validatorTimeunitsAllocation": "200",
+      "executionBudgetPerRound": "25000000000000000",
+      "totalMessageFees": "0",
+      "rotationsPerRound": "0"
+    },
+    "accept_version": {
+      "leaderTimeunitsAllocation": "100",
+      "validatorTimeunitsAllocation": "200",
+      "executionBudgetPerRound": "25000000000000000",
+      "totalMessageFees": "0",
+      "rotationsPerRound": "0"
+    },
+    "open_event": {
+      "leaderTimeunitsAllocation": "100",
+      "validatorTimeunitsAllocation": "200",
+      "executionBudgetPerRound": "25000000000000000",
+      "totalMessageFees": "0",
+      "rotationsPerRound": "0"
+    },
+    "submit": {
+      "leaderTimeunitsAllocation": "100",
+      "validatorTimeunitsAllocation": "200",
+      "executionBudgetPerRound": "25000000000000000",
+      "totalMessageFees": "0",
+      "rotationsPerRound": "0"
+    },
+    "close_window": {
+      "leaderTimeunitsAllocation": "100",
+      "validatorTimeunitsAllocation": "200",
+      "executionBudgetPerRound": "25000000000000000",
+      "totalMessageFees": "0",
+      "rotationsPerRound": "0"
+    },
+    "determine": {
+      "leaderTimeunitsAllocation": "100",
+      "validatorTimeunitsAllocation": "200",
+      "executionBudgetPerRound": "25000000000000000",
+      "totalMessageFees": "30000000000003106",
+      "rotationsPerRound": "0",
+      "childFeeQuote": {
+        "method": "record_finalized",
+        "recipient": "0x6c2d4DA39839B53d1550B1Df0ca560Dc7e042345",
+        "childFeeValue": "25000000000002588",
+        "reservedBudget": "30000000000003106",
+        "headroomBps": "12000",
+        "parentFeeValue": "155000000000036435",
+        "quotedAt": "2026-09-27T06:04:48.555Z"
+      }
+    },
+    "redeliver": {
+      "leaderTimeunitsAllocation": "100",
+      "validatorTimeunitsAllocation": "200",
+      "executionBudgetPerRound": "25000000000000000",
+      "totalMessageFees": "30000000000003106",
+      "rotationsPerRound": "0",
+      "childFeeQuote": {
+        "method": "record_finalized",
+        "recipient": "0x6c2d4DA39839B53d1550B1Df0ca560Dc7e042345",
+        "childFeeValue": "25000000000002588",
+        "reservedBudget": "30000000000003106",
+        "headroomBps": "12000",
+        "parentFeeValue": "155000000000036435",
+        "quotedAt": "2026-09-27T06:04:48.947Z"
+      }
+    },
+    "record_finalized": {
+      "leaderTimeunitsAllocation": "100",
+      "validatorTimeunitsAllocation": "200",
+      "executionBudgetPerRound": "25000000000000000",
+      "totalMessageFees": "0",
+      "rotationsPerRound": "0"
+    },
+    "apply": {
+      "leaderTimeunitsAllocation": "100",
+      "validatorTimeunitsAllocation": "200",
+      "executionBudgetPerRound": "25000000000000000",
+      "totalMessageFees": "0",
+      "rotationsPerRound": "0"
+    },
+    "claim": {
+      "leaderTimeunitsAllocation": "100",
+      "validatorTimeunitsAllocation": "200",
+      "executionBudgetPerRound": "25000000000000000",
+      "totalMessageFees": "0",
+      "rotationsPerRound": "0"
+    }
+  },
+  "warning": "Bootstrap and child-message allocations are network quoted, not measured. Browser writes remain disabled until representative finalized receipts, appeal history, successful child delivery and refunds are measured.",
+  "observedDeploymentReceipt": {
+    "transaction": "0xc1ec6d8fe0cf7f4ec4cd2f65597caea368b57346d2c967bf5168daa259ab8ca9",
+    "status": "FINALIZED",
+    "execution": "FINISHED_WITH_RETURN",
+    "votesCommitted": "5",
+    "votesRevealed": "5",
+    "executionConsumed": "78649000000000",
+    "storageFeeUsed": "21000000000"
+  }
+}
