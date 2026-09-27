@@ -50,13 +50,18 @@ if(command==='init-ledger'){
  const childMessageBudget=(childQuote.feeValue*12000n+9999n)/10000n;
  for(const method of ['determine','redeliver']){
   const preset=profile.methods[method];
+  // These parent calls may need an appeal round, so persist the same rotation
+  // count that the quote uses. Otherwise protocol.mjs reads the old zero value
+  // and quotes a deposit that omits the appeal-capable transaction path.
+  preset.rotationsPerRound='1';
+  const parentRotations=BigInt(preset.rotationsPerRound);
   const parentQuote=await client.estimateTransactionFees({
    leaderTimeunitsAllocation:BigInt(preset.leaderTimeunitsAllocation),
    validatorTimeunitsAllocation:BigInt(preset.validatorTimeunitsAllocation),
    executionBudgetPerRound:BigInt(preset.executionBudgetPerRound),
    totalMessageFees:childMessageBudget,
    appealRounds:1n,
-   rotations:[1n,1n],
+   rotations:[parentRotations,parentRotations],
   });
   preset.totalMessageFees=String(parentQuote.distribution.totalMessageFees);
   preset.childFeeQuote={
@@ -65,6 +70,7 @@ if(command==='init-ledger'){
    childFeeValue:childQuote.feeValue.toString(),
    reservedBudget:childMessageBudget.toString(),
    headroomBps:'12000',
+   rotationsPerRound:parentRotations.toString(),
    parentFeeValue:parentQuote.feeValue.toString(),
    quotedAt:new Date().toISOString(),
   };

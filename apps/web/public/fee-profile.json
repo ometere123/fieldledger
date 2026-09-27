@@ -84,15 +84,16 @@
       "validatorTimeunitsAllocation": "200",
       "executionBudgetPerRound": "25000000000000000",
       "totalMessageFees": "30000000000003106",
-      "rotationsPerRound": "0",
+      "rotationsPerRound": "1",
       "childFeeQuote": {
         "method": "record_finalized",
         "recipient": "0x6c2d4DA39839B53d1550B1Df0ca560Dc7e042345",
         "childFeeValue": "25000000000002588",
         "reservedBudget": "30000000000003106",
         "headroomBps": "12000",
+        "rotationsPerRound": "1",
         "parentFeeValue": "155000000000036435",
-        "quotedAt": "2026-09-27T06:04:48.555Z"
+        "quotedAt": "2026-09-27T07:31:43.907Z"
       }
     },
     "redeliver": {
@@ -100,15 +101,16 @@
       "validatorTimeunitsAllocation": "200",
       "executionBudgetPerRound": "25000000000000000",
       "totalMessageFees": "30000000000003106",
-      "rotationsPerRound": "0",
+      "rotationsPerRound": "1",
       "childFeeQuote": {
         "method": "record_finalized",
         "recipient": "0x6c2d4DA39839B53d1550B1Df0ca560Dc7e042345",
         "childFeeValue": "25000000000002588",
         "reservedBudget": "30000000000003106",
         "headroomBps": "12000",
+        "rotationsPerRound": "1",
         "parentFeeValue": "155000000000036435",
-        "quotedAt": "2026-09-27T06:04:48.947Z"
+        "quotedAt": "2026-09-27T07:31:44.311Z"
       }
     },
     "record_finalized": {
