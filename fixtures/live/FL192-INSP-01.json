@@ -1,0 +1,38 @@
+{
+  "evidenceId": "FL192-INSP-01",
+  "organisation": "INSPECTOR-1",
+  "type": "INSPECTION",
+  "source": "Synthetic independent inspection and recommissioning record",
+  "facts": [
+    {
+      "field": "inspection_id",
+      "value": "INSP-192-01"
+    },
+    {
+      "field": "asset",
+      "value": "K-401B"
+    },
+    {
+      "field": "filter_condition_at_trip",
+      "value": "Collapsed pleated lube filter; abnormal differential pressure"
+    },
+    {
+      "field": "external_damage",
+      "value": "None observed"
+    },
+    {
+      "field": "trip_started_at",
+      "value": "2026-09-27T15:41:06.008Z"
+    },
+    {
+      "field": "recommissioned_and_flow_restored_at",
+      "value": "2026-09-27T15:45:06.008Z"
+    }
+  ],
+  "redactions": [
+    "inspector identity details"
+  ],
+  "schemaVersion": 1,
+  "eventId": "FL-2026-192",
+  "observedAt": "2026-09-27T15:47:25.607Z"
+}

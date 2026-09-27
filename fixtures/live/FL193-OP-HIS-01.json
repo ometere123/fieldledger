@@ -1,0 +1,35 @@
+{
+  "evidenceId": "FL193-OP-HIS-01",
+  "organisation": "OP-WR",
+  "type": "HISTORIAN",
+  "source": "Synthetic compressor trip and restoration historian excerpt",
+  "facts": [
+    {
+      "field": "trip_started_at",
+      "value": "2026-09-27T16:06:09.697Z"
+    },
+    {
+      "field": "trip_reason",
+      "value": "Lube oil pressure fell to 1.2 bar below the 1.5 bar trip threshold"
+    },
+    {
+      "field": "compressor_trip_signal",
+      "value": "TRUE",
+      "at": "2026-09-27T16:06:09.697Z"
+    },
+    {
+      "field": "restored_flow_at",
+      "value": "2026-09-27T16:10:09.697Z"
+    },
+    {
+      "field": "pressure_after_filter_replacement",
+      "value": "2.1 bar"
+    }
+  ],
+  "redactions": [
+    "personnel identifiers"
+  ],
+  "schemaVersion": 1,
+  "eventId": "FL-2026-193",
+  "observedAt": "2026-09-27T16:12:09.700Z"
+}

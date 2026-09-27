@@ -1,0 +1,38 @@
+{
+  "evidenceId": "FL193-MNT-CMMS-01",
+  "organisation": "MNT-SP",
+  "type": "CMMS",
+  "source": "Synthetic signed preventive maintenance work order and corrective service record",
+  "facts": [
+    {
+      "field": "work_order",
+      "value": "WO-193-01"
+    },
+    {
+      "field": "asset",
+      "value": "K-401B"
+    },
+    {
+      "field": "filter_change_due_at",
+      "value": "2026-09-26T16:12:09.697Z"
+    },
+    {
+      "field": "preventive_maintenance_status_at_trip",
+      "value": "OVERDUE; scheduled filter replacement was not performed by the service provider"
+    },
+    {
+      "field": "trip_started_at",
+      "value": "2026-09-27T16:06:09.697Z"
+    },
+    {
+      "field": "collapsed_filter_replaced_at",
+      "value": "2026-09-27T16:10:09.697Z"
+    }
+  ],
+  "redactions": [
+    "technician identifiers"
+  ],
+  "schemaVersion": 1,
+  "eventId": "FL-2026-193",
+  "observedAt": "2026-09-27T16:12:22.380Z"
+}
