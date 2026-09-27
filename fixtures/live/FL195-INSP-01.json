@@ -1,0 +1,28 @@
+{
+  "evidenceId": "FL195-INSP-01",
+  "organisation": "INSPECTOR-1",
+  "type": "INSPECTION",
+  "source": "Synthetic independent electrical inspection",
+  "facts": [
+    {
+      "field": "trip_started_at",
+      "value": "2026-09-27T17:17:00.000Z"
+    },
+    {
+      "field": "restored_at",
+      "value": "2026-09-27T17:21:00.000Z"
+    },
+    {
+      "field": "incoming_utility_voltage_pu",
+      "value": "0.61"
+    },
+    {
+      "field": "local_compressor_fault",
+      "value": "NONE; trip coincided with incoming feeder voltage interruption"
+    }
+  ],
+  "redactions": [],
+  "schemaVersion": 1,
+  "eventId": "FL-2026-195",
+  "observedAt": "2026-09-27T17:25:34.909Z"
+}

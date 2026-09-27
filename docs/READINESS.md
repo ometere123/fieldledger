@@ -17,6 +17,14 @@ The GenLayer Project Review Criteria requires review of the real contracts and l
 - Close finalized in `0xdbe3aee6a494c82202dfd56c3946902f689ca9e90da65476f52c77adb280e15c`; determine finalized in `0xc2efebbd84627af86ef259db58556d3755cb5f32e0b7f46a6c672cbf15b59071`.
 - The leader proposed a maintenance deficiency, MNT-SP responsibility, clause `MNT-TEST-2026-01:4:service_credit`, and exact 4-minute interval 29842110–29842114. Two validators disagreed; two stopped after quorum. The event has no canonical final result and the consensus contract has no determined result. No child transaction is indexed. The parent receipt consumed 0.00028738575 GEN execution, 0.00000001375 GEN storage, and 0.025000000000002588 GEN message fee from a 0.155000000000036435 GEN deposit; the reserved child fee was consumed without a delivered/indexed child, so this path is not measured as successful.
 - FL194 confirms that increasing the evidence window did not resolve validator disagreement. Its synthetic source packages remain available under `fixtures/live/`.
+
+### FL195 live determination receipt (Generation 9, five-minute window)
+
+- A fresh synthetic test agreement `MNT-TEST-2026-09:2` was proposed and accepted with `evidenceWindowMinutes: 5`; the event type was `UTILITY_INTERRUPTION`. Generation 9 accepted it without changing the longer supported window range.
+- Event open finalized in `0x8e94a18f4ba0b94f99cca8b9e9be421a6c5a16c951fc6f83fdb4959554149f19`. The OP historian commitment finalized in `0x14855bd25799714293cd75782a51a2f432311ed4485ec885b71f4ec356e2ba6c`; independent inspector commitment finalized in `0xc2f52a783ff536dd8afd667368ed52a5bc2b94bb6717c957fda5069936245eeb`. Both source objects passed Worker/R2 digest and size verification.
+- The five-minute close deadline was `2026-09-27T17:29:35.348407Z`; close finalized in `0x94bb76cb7da57ad18d42000c44603394d6912b2d452c98023296ef6faaae635e`. Determine finalized in `0xa6360b935ff14cd007882238a7c3cd98864e259926d67d1dc360d61be550f7ae` with 5/5 votes revealed, but two validators disagreed and two stopped after quorum. Final consensus is `UNDETERMINED`; the event has no canonical result and no child transaction is indexed.
+- From a 0.155000000000036435 GEN deposit, execution consumed 0.0002863695 GEN, storage 0.0000000095 GEN, and message fees 0.025000000000002588 GEN despite no child delivery. This completes a five-minute evidence/close test, not a successful adjudication or measured successful child path.
+- The two synthetic evidence documents are preserved in `fixtures/live/FL195-OP-HIS-01.json` and `fixtures/live/FL195-INSP-01.json`.
 ## Verified implementation and tests
 
 - Event intake now preserves accepted party origin and event-type claims, permits a bounded counterparty envelope challenge, and shares the widest accepted physical interval across linked agreements.
