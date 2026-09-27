@@ -9,6 +9,7 @@ Six contracts are pinned to `py-genlayer:5jycge4q8k23462jtb0b9fyey1s9qz928sz2nbr
 | `npm run check` | Pass: typecheck, 46 Vitest tests, Next production build, contract Python compile |
 | `npm run test:e2e` | Pass: synthetic preview, register, detail, mobile viewport, browser errors |
 | `npm run test:live-ui` | Pass: configured app Auth and gateway read model with mocked account/API responses; no synthetic row |
+| `npm audit` | Pass: zero reported vulnerabilities in the full dependency tree |
 | `.venv/bin/pytest -q tests/test_contracts.py` | 21 passed on real cached v0.6 runner with test-only older-gltest loader bridge |
 | `genvm-lint contracts/*.py` | Six contracts passed |
 | Studio Dev RPC | Deployed contracts, registrations, agreements, event challenge and evidence commitments verified; live determination, appeal and child delivery remain outstanding |

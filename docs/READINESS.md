@@ -10,6 +10,8 @@ The GenLayer Project Review Criteria requires review of the real contracts and l
 - Each agreement applies its own deterministic consequence window to the shared canonical event.
 - Gateway receipt lookup uses the Studio Dev supported `eth_getTransactionByHash` enriched transaction record. It requires finalized successful execution and configured recipient/method checks before indexing.
 - `npm run check`: passed (TypeScript, 46 JS tests, Next production build, Python compilation).
+- `npm run test:e2e` and `npm run test:live-ui`: both passed again with the updated frontend test/deploy toolchain; the configured UI path remains mocked, not proof of live transaction integration.
+- `npm audit`: zero findings after updating Vitest and Wrangler; production dependency audit is also clean.
 - Studio Dev v0.6 Direct Mode: freshly passed, 24 tests with `genlayer-test 0.30.0rc2` / `genlayer-py 0.19.0rc2`; real GenVM v0.6.0-rc6 bundle prepared.
 - `genvm-lint check` (AST lint and semantic validation) passed for all six contracts.
 - Production build, real-browser E2E smoke and configured UI smoke passed. The configured UI smoke uses mocked sign-in, gateway, wallet, live event rows and appeal history; it does not prove live app transaction integration.
