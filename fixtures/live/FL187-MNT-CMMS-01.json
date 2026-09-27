@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "eventId": "FL-2026-187",
+  "evidenceId": "FL187-MNT-CMMS-01",
+  "organisation": "MNT-SP",
+  "type": "CMMS",
+  "observedAt": "2026-09-27T12:32:00Z",
+  "source": "Synthetic MNT-SP corrective work order test extract",
+  "facts": [
+    { "field": "work_order", "value": "WO-187-01" },
+    { "field": "asset", "value": "K-401B" },
+    { "field": "inspection_finding", "value": "Lube filter element collapsed; filter differential pressure elevated" },
+    { "field": "corrective_action", "value": "Replace filter element, flush lube circuit, and verify restored flow" },
+    { "field": "work_started_at", "value": "2026-09-27T12:30:00Z" }
+  ],
+  "redactions": ["technician identifiers"]
+}

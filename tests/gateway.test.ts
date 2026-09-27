@@ -24,10 +24,11 @@ describe('verified indexer and finality boundary',()=>{
  it('requires real measured fee profiles',()=>{expect(JSON.parse(readFileSync('apps/web/public/fee-profile.json','utf8')).status).toBe('unmeasured')});
 });
 describe('real gateway ingress path',()=>{
- const env=()=>{const objects=new Map<string,Uint8Array>();const EVIDENCE={put:async(k:string,v:Uint8Array)=>{objects.set(k,v)},get:async(k:string)=>objects.has(k)?{arrayBuffer:async()=>objects.get(k)!.buffer}:null,delete:async(k:string)=>{objects.delete(k)}};return {EVIDENCE,SUPABASE_URL:'https://db.example',SUPABASE_SERVICE_ROLE_KEY:'service',SUPABASE_ANON_KEY:'anon',ORGANISATION_HMAC_KEYS:'{}',GENLAYER_RPC:'https://rpc.example',CONTRACTS_JSON:'{}',INTERNAL_CRON_TOKEN:'cron',ALLOWED_ORIGIN:'https://app.example'}};
+ const env=()=>{const objects=new Map<string,Uint8Array>();const EVIDENCE={put:async(k:string,v:Uint8Array)=>{objects.set(k,v)},get:async(k:string)=>objects.has(k)?{arrayBuffer:async()=>objects.get(k)!.buffer}:null,delete:async(k:string)=>{objects.delete(k)}};return {EVIDENCE,SUPABASE_URL:'https://db.example',SUPABASE_SERVICE_ROLE_KEY:'service',SUPABASE_ANON_KEY:'anon',ORGANISATION_HMAC_KEYS:'{}',GENLAYER_RPC:'https://rpc.example',CONTRACTS_JSON:JSON.stringify(contracts),INTERNAL_CRON_TOKEN:'cron',ALLOWED_ORIGIN:'https://app.example'}};
  it('rejects missing user identity and source HMAC',async()=>{const e=env();const r=await gateway.fetch(new Request('https://gateway.example/v1/evidence/manual',{method:'POST',body:JSON.stringify(base)}),e as any);expect(r.status).toBe(401);const s=await gateway.fetch(new Request('https://gateway.example/v1/evidence/source',{method:'POST',body:JSON.stringify(base)}),e as any);expect(s.status).toBe(401)});
  it('rejects malformed facts before storing objects',async()=>{const e=env();const r=await gateway.fetch(new Request('https://gateway.example/v1/evidence/manual',{method:'POST',body:JSON.stringify({...base,facts:[]})}),e as any);expect(r.status).toBe(422)});
  it('never exposes a verdict setter',async()=>{const e=env();expect((await gateway.fetch(new Request('https://gateway.example/setVerdict',{method:'POST'}),e as any)).status).toBe(404)});
+ it('protects internal transaction indexing and validates hashes before lookup',async()=>{const e=env();expect((await gateway.fetch(new Request('https://gateway.example/internal/index',{method:'POST',body:JSON.stringify({hash:'0x'+'a'.repeat(64)})}),e as any)).status).toBe(401);expect((await gateway.fetch(new Request('https://gateway.example/internal/index',{method:'POST',headers:{authorization:'Bearer cron'},body:JSON.stringify({hash:'bad'})}),e as any)).status).toBe(422)});
 });
 describe('authenticated evidence ingestion with storage and database',()=>{
  const pkg={...base};
@@ -35,7 +36,7 @@ describe('authenticated evidence ingestion with storage and database',()=>{
   const objects=new Map<string,Uint8Array>();const rows=new Map<string,any>();
   const databaseHeaders:Headers[]=[];
   const EVIDENCE={put:async(k:string,v:Uint8Array)=>{objects.set(k,v)},get:async(k:string)=>objects.has(k)?{arrayBuffer:async()=>Uint8Array.from(objects.get(k)!).buffer}:null,delete:async(k:string)=>{objects.delete(k)}};
-  const env={EVIDENCE,SUPABASE_URL:'https://db.example',SUPABASE_SERVICE_ROLE_KEY:serviceKey,SUPABASE_ANON_KEY:'anon',ORGANISATION_HMAC_KEYS:JSON.stringify({OP:'strong-source-secret'}),GENLAYER_RPC:'https://rpc.example',CONTRACTS_JSON:'{}',INTERNAL_CRON_TOKEN:'cron',ALLOWED_ORIGIN:'https://app.example'};
+  const env={EVIDENCE,SUPABASE_URL:'https://db.example',SUPABASE_SERVICE_ROLE_KEY:serviceKey,SUPABASE_ANON_KEY:'anon',ORGANISATION_HMAC_KEYS:JSON.stringify({OP:'strong-source-secret'}),GENLAYER_RPC:'https://rpc.example',CONTRACTS_JSON:JSON.stringify(contracts),INTERNAL_CRON_TOKEN:'cron',ALLOWED_ORIGIN:'https://app.example'};
   const original=globalThis.fetch;
   vi.stubGlobal('fetch',async(url:string|URL|Request,init?:RequestInit)=>{
    const u=new URL(String(url));if(u.pathname.startsWith('/rest/v1/'))databaseHeaders.push(new Headers(init?.headers));if(u.pathname==='/auth/v1/user')return new Response(JSON.stringify({id:'user-1'}));

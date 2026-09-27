@@ -87,13 +87,13 @@
       "rotationsPerRound": "1",
       "childFeeQuote": {
         "method": "record_finalized",
-        "recipient": "0x6c2d4DA39839B53d1550B1Df0ca560Dc7e042345",
+        "recipient": "0xe9b719C6c4DB9E2390abceFe068f48d3A172C816",
         "childFeeValue": "25000000000002588",
         "reservedBudget": "30000000000003106",
         "headroomBps": "12000",
         "rotationsPerRound": "1",
         "parentFeeValue": "155000000000036435",
-        "quotedAt": "2026-09-27T07:31:43.907Z"
+        "quotedAt": "2026-09-27T14:08:44.029Z"
       }
     },
     "redeliver": {
@@ -104,13 +104,13 @@
       "rotationsPerRound": "1",
       "childFeeQuote": {
         "method": "record_finalized",
-        "recipient": "0x6c2d4DA39839B53d1550B1Df0ca560Dc7e042345",
+        "recipient": "0xe9b719C6c4DB9E2390abceFe068f48d3A172C816",
         "childFeeValue": "25000000000002588",
         "reservedBudget": "30000000000003106",
         "headroomBps": "12000",
         "rotationsPerRound": "1",
         "parentFeeValue": "155000000000036435",
-        "quotedAt": "2026-09-27T07:31:44.311Z"
+        "quotedAt": "2026-09-27T14:08:44.541Z"
       }
     },
     "record_finalized": {

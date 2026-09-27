@@ -1,1 +1,25 @@
-{"name":"fieldledger-gateway","main":"src/index.ts","compatibility_date":"2025-09-26","observability":{"enabled":true},"triggers":{"crons":["*/15 * * * *"]},"r2_buckets":[{"binding":"EVIDENCE","bucket_name":"fieldledger-evidence"}],"vars":{"GENLAYER_RPC":"https://studio-dev.genlayer.com/api","ALLOWED_ORIGIN":"https://fieldledger-sage.vercel.app","CONTRACTS_JSON":"{\"participants\":\"0xBe3ce98e470Aca23cD72694d0b160d2CF9F620f9\",\"agreements\":\"0x4050e3D455C9B462F3b540C5E766F395527AB0D2\",\"events\":\"0x6c2d4DA39839B53d1550B1Df0ca560Dc7e042345\",\"evidence\":\"0x80825d68D1F2C54816273e42F989f034cfa0fad2\",\"consensus\":\"0x5888Dd4419E5944aBF296047743f826b96c6ed3c\",\"obligations\":\"0x48A140CE6272f85D09Cd0B10661005f1FA2744A2\"}"}}
+{
+  "name": "fieldledger-gateway",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-09-26",
+  "observability": {
+    "enabled": true
+  },
+  "triggers": {
+    "crons": [
+      "*/15 * * * *"
+    ]
+  },
+  "r2_buckets": [
+    {
+      "binding": "EVIDENCE",
+      "bucket_name": "fieldledger-evidence"
+    }
+  ],
+  "vars": {
+    "GENLAYER_RPC": "https://studio-dev.genlayer.com/api",
+    "ALLOWED_ORIGIN": "https://fieldledger-sage.vercel.app",
+    "CONTRACTS_JSON": "{\"participants\":\"0xBe3ce98e470Aca23cD72694d0b160d2CF9F620f9\",\"agreements\":\"0x2577a50cdD593B91B72a364c77df79E6B52af454\",\"events\":\"0xe9b719C6c4DB9E2390abceFe068f48d3A172C816\",\"evidence\":\"0x614d7defFc14548eea5F887abe4fb0AB63c88E62\",\"consensus\":\"0x6069A859C3F3CF7DEEf6a4BF62F2C2Ca4B39dA66\",\"obligations\":\"0x8EF491481ab1c1e7c3aABD43A7eDbE982BA4D734\"}",
+    "CONTRACTS_ARCHIVE_JSON": "[{\"participants\":\"0xBe3ce98e470Aca23cD72694d0b160d2CF9F620f9\",\"agreements\":\"0x4050e3D455C9B462F3b540C5E766F395527AB0D2\",\"events\":\"0x6c2d4DA39839B53d1550B1Df0ca560Dc7e042345\",\"evidence\":\"0x80825d68D1F2C54816273e42F989f034cfa0fad2\",\"consensus\":\"0x5888Dd4419E5944aBF296047743f826b96c6ed3c\",\"obligations\":\"0x48A140CE6272f85D09Cd0B10661005f1FA2744A2\"},{\"participants\":\"0xBe3ce98e470Aca23cD72694d0b160d2CF9F620f9\",\"agreements\":\"0x4050e3D455C9B462F3b540C5E766F395527AB0D2\",\"events\":\"0x030bC67420D6f28189a8923D27eee6A0fC9Ea6d9\",\"evidence\":\"0xC3548bf1d78781De4F8D1dCe3C4788528839A086\",\"consensus\":\"0xeCBBb2B96ce60ce6bE4136bb393108FE1598c538\",\"obligations\":\"0x511caeaE681D81cfcc145B552C92cDF4a286Ce3D\"},{\"participants\":\"0xBe3ce98e470Aca23cD72694d0b160d2CF9F620f9\",\"agreements\":\"0x4050e3D455C9B462F3b540C5E766F395527AB0D2\",\"events\":\"0xe4FD3923400beA8DE6040f08a527cC9E23f938A6\",\"evidence\":\"0x039713d17D71Dc87f994a06Ba1B0795368d3ad6D\",\"consensus\":\"0x71213DD31e6Ea586D898939c05FF6126432512dC\",\"obligations\":\"0x4F3954f120DAF312e411EfeC406d72E5b2eb212f\"},{\"participants\":\"0xBe3ce98e470Aca23cD72694d0b160d2CF9F620f9\",\"agreements\":\"0x2577a50cdD593B91B72a364c77df79E6B52af454\",\"events\":\"0x51cC23390798E922B7ba9BC37850F0d0Edf443c6\",\"evidence\":\"0xD3658EaCE8B57aC9Aa17A1D5Eda852d11F0BF198\",\"consensus\":\"0xdd5b1C18d1776a81ae433e6656599f5677E09a25\",\"obligations\":\"0xd0830Ee33F1Ba566340e8274Cb948f3B5ffE5285\"}]"
+  }
+}

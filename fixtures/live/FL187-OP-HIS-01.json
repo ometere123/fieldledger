@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "eventId": "FL-2026-187",
+  "evidenceId": "FL187-OP-HIS-01",
+  "organisation": "OP-WR",
+  "type": "HISTORIAN",
+  "observedAt": "2026-09-27T12:31:00Z",
+  "source": "Synthetic K-401B historian test extract",
+  "facts": [
+    { "field": "lube_oil_pressure", "value": "1.2", "unit": "bar", "at": "2026-09-27T12:29:00Z" },
+    { "field": "low_pressure_trip_threshold", "value": "1.5", "unit": "bar" },
+    { "field": "compressor_trip_signal", "value": "TRUE", "unit": "boolean", "at": "2026-09-27T12:30:00Z" }
+  ],
+  "redactions": ["personnel identifiers"]
+}

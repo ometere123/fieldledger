@@ -1,9 +1,12 @@
 import { readFileSync,writeFileSync,existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { createAccount,createClient,chains,isSuccessful } from 'genlayer-js';
-const manifest=JSON.parse(readFileSync('deployment.studio-dev.json','utf8')).contracts;
+import { createAccount,createClient,chains,isSuccessful,MessageType,MESSAGE_ALLOCATION_ROOT_PARENT_INDEX,deriveInternalMessageCallKey,encodeInternalMessageFeeParams } from 'genlayer-js';
+const deployment=JSON.parse(readFileSync('deployment.studio-dev.json','utf8'));
+if(deployment.network!=='studio-dev'||deployment.chainId!==61997)throw Error('Studio Dev chain 61997 deployment required');
+const manifest=process.env.DEMO_CONTRACTS_JSON?JSON.parse(process.env.DEMO_CONTRACTS_JSON):deployment.contracts;
+if(!['participants','agreements','events','evidence','consensus','obligations'].every(name=>/^0x[0-9a-fA-F]{40}$/.test(manifest[name]??'')))throw Error('Complete contract map required');
 const profile=JSON.parse(readFileSync('apps/web/public/fee-profile.json','utf8'));
-if(!['network-quoted-bootstrap','simulated','measured'].includes(profile.status))throw Error('Network-quoted 61997 bootstrap profile required');if(profile.status!=='measured')console.warn('Calibration only: fee allocation unmeasured; inspect every receipt and do not present this flow as production.');
+if(!['network-quoted-bootstrap','simulated','measured','unmeasured'].includes(profile.status)||profile.network!=='studio-dev'||profile.chainId!==61997)throw Error('Studio Dev 61997 fee profile required');if(profile.status!=='measured')console.warn('Calibration only: fee path unmeasured; each write still receives a fresh SDK quote and receipts require review; browser writes remain disabled.');
 const role=process.argv[2],step=process.argv[3];const privateKey=process.env[`${role?.toUpperCase()}_PRIVATE_KEY`];
 if(!/^0x[0-9a-fA-F]{64}$/.test(privateKey??''))throw Error(`${role?.toUpperCase()}_PRIVATE_KEY required locally`);
 const client=createClient({chain:chains.studioDevnet,endpoint:'https://studio-dev.genlayer.com/api',account:createAccount(privateKey)});
@@ -52,14 +55,22 @@ async function settle(entry){
 }
 async function write(contract,method,args){
  const key=createHash('sha256').update(`${role}|${contract}|${method}|${serialise(args)}`).digest('hex');
- const prior=flow.find(item=>item.key===key);
- if(prior){if(prior.status!=='FINALIZED')await settle(prior);else if(prior.execution!=='FINISHED_WITH_RETURN')throw Error(`Recorded transaction ${prior.hash} finalized unsuccessfully; inspect it before retrying`);else console.log('already finalized',prior.hash);return prior.hash}
+ let prior=flow.find(item=>item.key===key),previousFailure;
+ if(prior){if(prior.status!=='FINALIZED')await settle(prior);else if(prior.execution!=='FINISHED_WITH_RETURN'){previousFailure={hash:prior.hash,status:prior.status,execution:prior.execution,finalizedAt:prior.finalizedAt};flow.splice(flow.indexOf(prior),1);writeFileSync(flowFile,JSON.stringify(flow,null,2)+'\n');prior=undefined}else{console.log('already finalized',prior.hash);return prior.hash}if(prior)return prior.hash}
  const current=await alreadyApplied(contract,method,args);
  if(assertSameState(method,args,current)){console.log('already applied onchain',method);return null}
  const p=profile.methods[method];if(!p)throw Error(`Missing fee profile for ${method}`);
- const q=await client.estimateTransactionFees({leaderTimeunitsAllocation:BigInt(p.leaderTimeunitsAllocation),validatorTimeunitsAllocation:BigInt(p.validatorTimeunitsAllocation),executionBudgetPerRound:BigInt(p.executionBudgetPerRound),totalMessageFees:BigInt(p.totalMessageFees),appealRounds:1n,rotations:[1n,1n]});
- const hash=await client.writeContract({address:manifest[contract],functionName:method,args,fees:{distribution:q.distribution,feeValue:q.feeValue}});
- const entry={key,hash,contract,method,args:JSON.parse(serialise(args)),role,status:'SUBMITTED',submittedAt:new Date().toISOString(),feeDeposit:q.feeValue.toString()};flow.push(entry);writeFileSync(flowFile,JSON.stringify(flow,null,2)+'\n');
+ const feeOptions={leaderTimeunitsAllocation:BigInt(p.leaderTimeunitsAllocation),validatorTimeunitsAllocation:BigInt(p.validatorTimeunitsAllocation),executionBudgetPerRound:BigInt(p.executionBudgetPerRound),appealRounds:1n,rotations:[BigInt(p.rotationsPerRound??'1'),BigInt(p.rotationsPerRound??'1')]};
+ let allocations;
+ if(method==='determine'||method==='redeliver'){
+  const child=profile.methods.record_finalized;if(!manifest.events||!child)throw Error('EventRegistry child fee preset is required');
+  const childQuote=await client.estimateTransactionFees({leaderTimeunitsAllocation:BigInt(child.leaderTimeunitsAllocation),validatorTimeunitsAllocation:BigInt(child.validatorTimeunitsAllocation),executionBudgetPerRound:BigInt(child.executionBudgetPerRound),totalMessageFees:BigInt(child.totalMessageFees??'0'),appealRounds:0n,rotations:[BigInt(child.rotationsPerRound??'0')]});
+  const budget=BigInt(p.childFeeQuote?.reservedBudget??((childQuote.feeValue*12000n+9999n)/10000n));if(budget<childQuote.feeValue)throw Error('Finalized child allocation is below the current fee quote');
+  const d=childQuote.distribution;allocations=[{messageType:MessageType.Internal,onAcceptance:false,parentIndex:MESSAGE_ALLOCATION_ROOT_PARENT_INDEX,recipient:manifest.events,callKey:deriveInternalMessageCallKey('record_finalized'),budget,feeParams:encodeInternalMessageFeeParams({leaderTimeunitsAllocation:d.leaderTimeunitsAllocation,validatorTimeunitsAllocation:d.validatorTimeunitsAllocation,appealRounds:d.appealRounds,executionBudgetPerRound:d.executionBudgetPerRound,rotations:d.rotations,maxPriceGenPerTimeUnit:d.maxPriceGenPerTimeUnit,storageFeeMaxGasPrice:d.storageFeeMaxGasPrice,receiptFeeMaxGasPrice:d.receiptFeeMaxGasPrice})}];
+ }
+ const q=await client.estimateTransactionFees({...feeOptions,...(allocations?{messageAllocations:allocations}:{totalMessageFees:BigInt(p.totalMessageFees??'0')})});
+ const hash=await client.writeContract({address:manifest[contract],functionName:method,args,fees:{distribution:q.distribution,feeValue:q.feeValue,...(q.messageAllocations?.length?{messageAllocations:q.messageAllocations}:allocations?{messageAllocations:allocations}:{})}});
+ const entry={key,hash,contract,method,args:JSON.parse(serialise(args)),role,status:'SUBMITTED',submittedAt:new Date().toISOString(),feeDeposit:q.feeValue.toString(),...(previousFailure?{previousFailure}:{})};flow.push(entry);writeFileSync(flowFile,JSON.stringify(flow,null,2)+'\n');
  console.log('submitted',method,hash,'deposit',q.feeValue.toString());await settle(entry);return hash;
 }
 const event=process.env.DEMO_EVENT_ID??'FL-2026-184';const agreement=process.env.DEMO_AGREEMENT_ID??'MNT-2026-04';const version=BigInt(process.env.DEMO_AGREEMENT_VERSION??'1');const links=JSON.parse(process.env.DEMO_LINKS_JSON??JSON.stringify([{id:agreement,version:Number(version)}]));

@@ -65,6 +65,8 @@ class EventRegistry(gl.contract.Contract):
             for source in policy.get('externalSources',[]):
                 if source not in external_sources: external_sources.append(source)
         assert len(parties) >= 2
+        assert len(external_sources) <= 6, 'event external-source allocation exceeds six reserved slots'
+        external_sources.sort()
         for party in parties:
             if participant_view.authorised(party, gl.message.sender_address): originator = party
         assert originator != '', 'only an accepted agreement party may originate the event'

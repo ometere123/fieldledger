@@ -31,6 +31,7 @@ MAX_PACKAGE_BYTES = 4096
 MAX_PACKAGE_FACTS = 10
 MAX_EVENT_BYTES = 131072
 MAX_EVENT_FACTS = 240
+MAX_VALIDATOR_INTERVAL_VARIANCE_MINUTES = 5
 
 class EventConsensus(gl.contract.Contract):
     events: Address
@@ -102,9 +103,9 @@ class EventConsensus(gl.contract.Contract):
                   'Event type claims, physical-event bounds and policy scopes are in the signed event envelope. '
                   'Cause/responsibility domain relationships: ' + json.dumps(CAUSE_DOMAINS) + '. '
                   'Use OPERATOR only for the operator; MAINTENANCE only for an accepted maintenance/service provider; OEM only for an accepted OEM. EXTERNAL may have an empty org when the third party is not an agreement party. NONE requires an empty org. '
-                  'Identify the actual operational interval from evidence rather than trusting the reporter. '
+                  'Identify the actual operational interval from evidence rather than trusting the reporter. Use explicit timestamp facts for both interval endpoints; never substitute the entire signed envelope bounds for a missing endpoint. The interval must be positive and no longer than 43,200 minutes; if the evidence does not establish a defensible endpoint, return UNDETERMINED. '
                   'Use UNDETERMINED if evidence is absent, contradictory, stale or inadequate. Do not invent evidence or clauses. '
-                  'Use clause_ids for the applicable rule references and excluded_clause_ids only for policy exclusion references. '
+                  'Use these exact fully-qualified clause references (do not shorten them to clause names): ' + json.dumps(allowed_clauses) + '. Use these exact fully-qualified exclusion references (do not shorten them to exclusion names): ' + json.dumps(allowed_exclusions) + '. Evidence IDs must be copied exactly from the retrieved evidence. '
                   'Participant and agreement data: ' + json.dumps({'event':ev,'policies':policies,'manifest':manifest['digest']}))
 
         def uncertain(reason):
@@ -173,27 +174,40 @@ class EventConsensus(gl.contract.Contract):
                         if finding['cause_code'] not in contributing or not set(contributing).issubset(allowed_contributing): return False
                     elif contributing: return False
                 if leader.get('responsible_domain') not in CAUSE_DOMAINS[leader['cause']] or own.get('responsible_domain') not in CAUSE_DOMAINS[own['cause']]: return False
-                if len(str(leader.get('rationale',''))) > 500: return False
-                if not isinstance(leader.get('evidence_ids'),list) or not set(leader['evidence_ids']).issubset(set(retrieved_ids)): return False
-                if not isinstance(own.get('evidence_ids'),list) or not set(own['evidence_ids']).issubset(set(retrieved_ids)): return False
-                if leader['cause'] != 'UNDETERMINED' and len(leader['evidence_ids']) == 0: return False
-                if not isinstance(leader.get('clause_ids'),list) or not set(leader['clause_ids']).issubset(set(allowed_clauses)): return False
-                if not isinstance(leader.get('clause_evidence'),dict) or set(leader['clause_evidence']) != set(leader['clause_ids']): return False
-                if not isinstance(own.get('clause_evidence'),dict) or set(own['clause_evidence']) != set(own.get('clause_ids',[])): return False
-                for ref in leader['clause_ids']:
-                    required,age,scope = clause_requirements[ref]
-                    ids_for_clause = leader['clause_evidence'][ref]
-                    if not isinstance(ids_for_clause,list) or not ids_for_clause: return False
-                    scoped = [item for item in references if item['id'] in ids_for_clause and item['id'] in retrieved_ids and scope in item.get('admissibleFor',[])]
-                    if len(scoped) != len(ids_for_clause) or not any(item['kind'] in required and int(datetime.fromisoformat(item['observedAt'].replace('Z','+00:00')).timestamp()//60) >= int(ev['openedMinute'])-age for item in scoped): return False
-                if not isinstance(leader.get('excluded_clause_ids'),list) or not set(leader['excluded_clause_ids']).issubset(set(allowed_exclusions)): return False
-                if any(exclusion_causes[ref] != leader['cause'] for ref in leader['excluded_clause_ids']): return False
+                for finding in (leader, own):
+                    evidence_ids = finding.get('evidence_ids')
+                    if not isinstance(evidence_ids,list) or len(evidence_ids) != len(set(evidence_ids)) or not set(evidence_ids).issubset(set(retrieved_ids)): return False
+                    if finding['cause'] != 'UNDETERMINED' and not evidence_ids: return False
+                    clause_ids = finding.get('clause_ids')
+                    if not isinstance(clause_ids,list) or len(clause_ids) != len(set(clause_ids)) or not set(clause_ids).issubset(set(allowed_clauses)): return False
+                    clause_evidence = finding.get('clause_evidence')
+                    if not isinstance(clause_evidence,dict) or set(clause_evidence) != set(clause_ids): return False
+                    for ref in clause_ids:
+                        required,age,scope = clause_requirements[ref]
+                        ids_for_clause = clause_evidence[ref]
+                        if not isinstance(ids_for_clause,list) or not ids_for_clause or len(ids_for_clause) != len(set(ids_for_clause)): return False
+                        if not set(ids_for_clause).issubset(set(evidence_ids)): return False
+                        scoped = [item for item in references if item['id'] in ids_for_clause and item['id'] in retrieved_ids and scope in item.get('admissibleFor',[])]
+                        if len(scoped) != len(ids_for_clause) or not any(item['kind'] in required and int(datetime.fromisoformat(item['observedAt'].replace('Z','+00:00')).timestamp()//60) >= int(ev['openedMinute'])-age for item in scoped): return False
+                    excluded = finding.get('excluded_clause_ids')
+                    if not isinstance(excluded,list) or len(excluded) != len(set(excluded)) or not set(excluded).issubset(set(allowed_exclusions)): return False
+                    if any(exclusion_causes[ref] != finding['cause'] for ref in excluded): return False
+                    if len(str(finding.get('rationale',''))) > 500: return False
                 if not self._responsibility_valid(leader,ev) or not self._responsibility_valid(own,ev): return False
-                if leader.get('event_type') not in [claim['eventType'] for claim in ev.get('eventTypeClaims',[])]: return False
-                start = int(leader.get('start_minute',0)); end = int(leader.get('end_minute',0))
-                if leader['cause'] != 'UNDETERMINED' and (start < int(ev['intervalStartMin']) or end > int(ev['intervalEndMax']) or end <= start or end - start > 43200): return False
-                substantive = lambda x:(x.get('event_type'),x.get('cause'),x.get('cause_class'),x.get('cause_code'),sorted(x.get('contributing_codes',[])),x.get('responsible_domain'),x.get('responsible_org'),int(x.get('start_minute',0)),int(x.get('end_minute',0)),sorted(x.get('clause_ids',[])),sorted((k,sorted(v)) for k,v in x.get('clause_evidence',{}).items()),sorted(x.get('excluded_clause_ids',[])),sorted(x.get('evidence_ids',[])))
-                return substantive(leader) == substantive(own)
+                claims = [claim['eventType'] for claim in ev.get('eventTypeClaims',[])]
+                if leader.get('event_type') not in claims or own.get('event_type') not in claims: return False
+                intervals = []
+                for finding in (leader, own):
+                    start = int(finding.get('start_minute',0)); end = int(finding.get('end_minute',0))
+                    if finding['cause'] != 'UNDETERMINED' and (start < int(ev['intervalStartMin']) or end > int(ev['intervalEndMax']) or end <= start or end - start > 43200): return False
+                    intervals.append((start,end))
+                # Validators must agree on the consequence-bearing decision;
+                # citations and rationale may differ when both validate against
+                # the same authorised evidence and clause scopes.
+                substantive = lambda x:(x.get('event_type'),x.get('cause'),x.get('cause_class'),x.get('cause_code'),x.get('responsible_domain'),x.get('responsible_org'),sorted(x.get('clause_ids',[])),sorted(x.get('excluded_clause_ids',[])))
+                if substantive(leader) != substantive(own): return False
+                if leader['cause'] != 'UNDETERMINED' and any(abs(a-b) > MAX_VALIDATOR_INTERVAL_VARIANCE_MINUTES for a,b in zip(intervals[0],intervals[1])): return False
+                return True
             except Exception: return False
 
         result = json.loads(gl.vm.run_nondet(assess,valid))

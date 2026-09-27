@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "eventId": "FL-2026-187",
+  "evidenceId": "FL187-INSP-01",
+  "organisation": "INSPECTOR-1",
+  "type": "INSPECTION",
+  "observedAt": "2026-09-27T12:33:00Z",
+  "source": "Synthetic independent inspection test record",
+  "facts": [
+    { "field": "inspection_id", "value": "INSP-187-01" },
+    { "field": "asset", "value": "K-401B" },
+    { "field": "filter_condition", "value": "Collapsed pleated element with abnormal differential pressure observed" },
+    { "field": "seal_and_installation", "value": "Housing seal seated; element correctly installed" },
+    { "field": "external_damage", "value": "No impact damage observed" }
+  ],
+  "redactions": ["inspector identity details"]
+}

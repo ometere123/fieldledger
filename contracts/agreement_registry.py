@@ -24,7 +24,7 @@ class AgreementRegistry(gl.contract.Contract):
         assert data['type'] in ('MAINTENANCE_SLA','AVAILABILITY','WARRANTY','JV_ALLOCATION','REFERENCE')
         assert data['mode'] in ('OBSERVE','ENFORCE')
         window = data.get('evidenceWindowMinutes',2880)
-        assert type(window) is int and 60 <= window <= 10080
+        assert type(window) is int and 10 <= window <= 10080
         data['evidenceWindowMinutes'] = window
         lead = data.get('intervalLeadMinutes',120)
         duration = data.get('maxEventDurationMinutes',43200)

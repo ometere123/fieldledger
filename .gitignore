@@ -9,6 +9,7 @@ node_modules/
 __pycache__/
 .pytest_cache/
 deployment.studio-dev.json
+deployment.studio-dev-generation.json
 coverage/
 
 flow.studio-dev.json
@@ -20,3 +21,5 @@ artifacts/
 .env.*
 !.env.example
 tmp-rubric.txt
+
+tmp/

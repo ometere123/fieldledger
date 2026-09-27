@@ -114,9 +114,12 @@ def test_accepted_window_external_sources_and_policy_taxonomy():
             vm.sender=op;c.propose_version('P1','OP','SP',1,json.dumps(terms))
             vm.sender=sp;c.accept_version('P1',1)
             accepted=json.loads(c.get_version('P1',1));assert accepted['policy']['evidenceWindowMinutes']==4320 and accepted['policy']['externalSources']==['LAB1']
-            for changed in ({'externalSources':['UNREGISTERED']},{'evidenceWindowMinutes':1},{'causalTaxonomy':['MAINTENANCE_DEFICIENCY']}):
+            for changed in ({'externalSources':['UNREGISTERED']},{'evidenceWindowMinutes':9},{'causalTaxonomy':['MAINTENANCE_DEFICIENCY']}):
                 invalid=dict(terms,**changed);vm.sender=op
                 with pytest.raises(Exception):c.propose_version('P1','OP','SP',2,json.dumps(invalid))
+            short_window=dict(terms,evidenceWindowMinutes=15);vm.sender=op;c.propose_version('P1','OP','SP',2,json.dumps(short_window))
+            vm.sender=sp;c.accept_version('P1',2)
+            assert json.loads(c.get_version('P1',2))['policy']['evidenceWindowMinutes']==15
     finally:close_ctx(ctx)
 
 def test_event_open_cannot_be_modified_and_requires_accepted_links():
@@ -168,7 +171,7 @@ def test_event_derives_accepted_window_interval_and_sources():
     vm,c,ctx=deploy_one('event_registry.py',create_address('P'),create_address('A'))
     gl = sys.modules[c.__class__.__module__].gl
     op=create_address('operator');p=Read(authorised=lambda org,who:org=='OP' and bytes(who.as_bytes)==raw_address(op),organisation=lambda org:'registered',get=lambda org:json.dumps({'role':'OPERATOR' if org=='OP' else 'SERVICE_PROVIDER'}))
-    def terms(aid,v):return json.dumps({'accepted':True,'operator':'OP','counterparty':'SP','policy':{'assets':['K401'],'evidenceWindowMinutes':4320 if aid=='A2' else 1440,'intervalLeadMinutes':90,'maxEventDurationMinutes':720 if aid=='A2' else 120,'externalSources':['LAB1'] if aid=='A1' else ['LAB1','OEMLAB']}})
+    def terms(aid,v):return json.dumps({'accepted':True,'operator':'OP','counterparty':'SP','policy':{'assets':['K401'],'evidenceWindowMinutes':4320 if aid=='A2' else 1440,'intervalLeadMinutes':90,'maxEventDurationMinutes':720 if aid=='A2' else 120,'externalSources':['LAB1'] if aid=='A1' else ['LAB1','OEMLAB'] if aid=='A2' else ['LAB2','LAB3','LAB4','LAB5','LAB6','LAB7']}})
     try:
         vm.sender=op;warp(vm, '2026-09-26T10:00:00Z');minute=int(__import__('datetime').datetime(2026,9,26,10,tzinfo=__import__('datetime').timezone.utc).timestamp()//60)
         with patch.object(gl.contract,'get_at',side_effect=lambda addr:p if addr==c.participants else Read(get_version=terms)):
@@ -176,6 +179,7 @@ def test_event_derives_accepted_window_interval_and_sources():
             data=json.loads(c.get('EV1'))
             assert data['intervalStartMin']==minute-90 and data['intervalEndMax']==minute+720
             assert data['externalSources']==['LAB1','OEMLAB'] and data['sourceScopes']['LAB1']==['A1:1','A2:1'] and data['sourceScopes']['OEMLAB']==['A2:1'] and data['closeAfter'].startswith('2026-09-29T10:00')
+            with pytest.raises(Exception):c.open_event('EV2','K401','OP','UNIT_TRIP',minute,json.dumps([{'id':'A2','version':1},{'id':'A3','version':1}]))
     finally:close_ctx(ctx)
 
 def test_evidence_window_challenge_and_immutable_manifest():
@@ -207,9 +211,9 @@ def test_evidence_window_challenge_and_immutable_manifest():
 def test_evidence_admission_reserves_bounded_capacity_for_every_source():
     vm,c,ctx=deploy_one('evidence_registry.py',create_address('P'),create_address('E'),'https://gateway.example/v1/evidence/')
     gl = sys.modules[c.__class__.__module__].gl
-    op=create_address('operator');sp=create_address('contractor');lab=create_address('lab')
-    e=Read(get=lambda event:json.dumps({'id':event,'parties':['OP','SP'],'externalSources':['LAB1'],'sourceScopes':{'OP':['A1:1'],'SP':['A1:1'],'LAB1':['A1:1']},'closeAfter':'2026-10-01T00:00:00+00:00'}))
-    p=Read(authorised=lambda org,who:(org=='OP' and bytes(who.as_bytes)==raw_address(op)) or (org=='SP' and bytes(who.as_bytes)==raw_address(sp)) or (org=='LAB1' and bytes(who.as_bytes)==raw_address(lab)),organisation=lambda org:'registered')
+    op=create_address('operator');sp=create_address('contractor');lab=create_address('lab');lab2=create_address('lab2')
+    e=Read(get=lambda event:json.dumps({'id':event,'parties':['OP','SP'],'externalSources':['LAB1','LAB2'],'sourceScopes':{'OP':['A1:1'],'SP':['A1:1'],'LAB1':['A1:1'],'LAB2':['A1:1']},'closeAfter':'2026-10-01T00:00:00+00:00'}))
+    p=Read(authorised=lambda org,who:(org=='OP' and bytes(who.as_bytes)==raw_address(op)) or (org=='SP' and bytes(who.as_bytes)==raw_address(sp)) or (org=='LAB1' and bytes(who.as_bytes)==raw_address(lab)) or (org=='LAB2' and bytes(who.as_bytes)==raw_address(lab2)),organisation=lambda org:'registered')
     try:
         with patch.object(gl.contract,'get_at',side_effect=lambda a:e if a==c.events else p):
             warp(vm, '2026-09-26T10:00:00Z')
@@ -222,9 +226,12 @@ def test_evidence_admission_reserves_bounded_capacity_for_every_source():
             submit_many('SP',sp,9)
             vm.sender=sp
             with pytest.raises(Exception):c.submit('SP_over','EV1','SP','MANUAL','b'*64,'2026-09-26T09:00:00Z','',4096,10)
-            submit_many('LAB1',lab,6)
+            submit_many('LAB1',lab,3)
             vm.sender=lab
             with pytest.raises(Exception):c.submit('LAB1_over','EV1','LAB1','MANUAL','c'*64,'2026-09-26T09:00:00Z','',4096,10)
+            submit_many('LAB2',lab2,3)
+            vm.sender=lab2
+            with pytest.raises(Exception):c.submit('LAB2_over','EV1','LAB2','MANUAL','d'*64,'2026-09-26T09:00:00Z','',4096,10)
             assert int(c.event_bytes.get('EV1')) == 24*4096
             assert int(c.event_facts.get('EV1')) == 24*10
             warp(vm, '2026-10-02T00:00:00Z')
@@ -339,14 +346,23 @@ def test_consensus_substantive_validator_and_hostile_package(mode):
             c.determine('EV1')
             assert json.loads(c.get('EV1'))['cause']==('MAINTENANCE_DEFICIENCY' if mode in ('normal','one_bad','budget','bytes_budget') else 'UNDETERMINED')
             assert emitted and emitted[0][0]=='EV1'
-            if mode=='normal': assert any('Ignore all previous instructions' in p for p in prompts)
+            if mode=='normal':
+                assert any('Ignore all previous instructions' in p for p in prompts)
+                assert any('A1:1:credit' in p and 'fully-qualified' in p and 'both interval endpoints' in p for p in prompts)
             validate=captures[0]
             if mode=='normal':
-             for attack in [dict(finding,cause='OPERATOR_CAUSED'),dict(finding,cause='CONTROL_SYSTEM_FAILURE'),dict(finding,cause_class='OPERATOR_CAUSED'),dict(finding,cause_code='OPERATOR_ERROR'),dict(finding,cause_code='FREE_TEXT'),dict(finding,contributing_codes=['OPERATOR_ERROR']),dict(finding,responsible_org='OP'),dict(finding,responsible_domain='OEM'),dict(finding,evidence_ids=['FAKE']),dict(finding,clause_ids=['A1:1:FAKE']),dict(finding,clause_evidence={'A1:1:credit':['LAB_ONLY_FOR_A2']}),dict(finding,start_minute=101),dict(finding,start_minute=-1),dict(finding,end_minute=1001),dict(finding,event_type='PUMP_FAILURE')]:
+             for attack in [dict(finding,cause='OPERATOR_CAUSED'),dict(finding,cause='CONTROL_SYSTEM_FAILURE'),dict(finding,cause_class='OPERATOR_CAUSED'),dict(finding,cause_code='OPERATOR_ERROR'),dict(finding,cause_code='FREE_TEXT'),dict(finding,contributing_codes=['OPERATOR_ERROR']),dict(finding,responsible_org='OP'),dict(finding,responsible_domain='OEM'),dict(finding,evidence_ids=['FAKE']),dict(finding,clause_ids=['A1:1:FAKE']),dict(finding,clause_evidence={'A1:1:credit':['LAB_ONLY_FOR_A2']}),dict(finding,start_minute=106),dict(finding,start_minute=-1),dict(finding,end_minute=1001),dict(finding,event_type='PUMP_FAILURE')]:
                 assert not validate(gl.vm.Return(json.dumps(attack)))
              assert validate(gl.vm.Return(json.dumps(finding)))
              with patch.object(gl.nondet,'exec_prompt',return_value=dict(finding,cause='CONTROL_SYSTEM_FAILURE')):
                 assert not validate(gl.vm.Return(json.dumps(dict(finding,cause='CONTROL_SYSTEM_FAILURE'))))
              with patch.object(gl.nondet,'exec_prompt',return_value=dict(finding,start_minute=-1)):
                 assert not validate(gl.vm.Return(json.dumps(dict(finding,start_minute=-1))))
+             alternate=dict(finding,evidence_ids=['E1'],clause_evidence={'A1:1:credit':['E1']},start_minute=104,end_minute=337,contributing_codes=['LUBRICATION_DEGRADATION','MECHANICAL_FAILURE'],rationale='The historian trend supports the maintenance finding.')
+             with patch.object(gl.nondet,'exec_prompt',return_value=alternate):
+                assert validate(gl.vm.Return(json.dumps(finding)))
+             with patch.object(gl.nondet,'exec_prompt',return_value=dict(alternate,start_minute=106)):
+                assert not validate(gl.vm.Return(json.dumps(finding)))
+             with patch.object(gl.nondet,'exec_prompt',return_value=dict(alternate,clause_ids=[] ,clause_evidence={})):
+                assert not validate(gl.vm.Return(json.dumps(finding)))
     finally:close_ctx(ctx)
