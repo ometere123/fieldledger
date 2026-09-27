@@ -1,0 +1,29 @@
+{
+  "evidenceId": "FL196-OP-HIS-01",
+  "organisation": "OP-WR",
+  "type": "HISTORIAN",
+  "source": "Synthetic utility interruption historian snapshot",
+  "facts": [
+    {
+      "field": "trip_started_at",
+      "value": "2026-09-27T17:42:00.000Z"
+    },
+    {
+      "field": "compressor_trip_signal",
+      "value": "TRUE",
+      "at": "2026-09-27T17:42:00.000Z"
+    },
+    {
+      "field": "incoming_utility_voltage_pu",
+      "value": "0.62"
+    },
+    {
+      "field": "restored_at",
+      "value": "2026-09-27T17:46:00.000Z"
+    }
+  ],
+  "redactions": [],
+  "schemaVersion": 1,
+  "eventId": "FL-2026-196",
+  "observedAt": "2026-09-27T17:50:48.087Z"
+}

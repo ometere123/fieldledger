@@ -26,6 +26,12 @@ The GenLayer Project Review Criteria requires review of the real contracts and l
 - From a 0.155000000000036435 GEN deposit, execution consumed 0.0002863695 GEN, storage 0.0000000095 GEN, and message fees 0.025000000000002588 GEN despite no child delivery. This completes a five-minute evidence/close test, not a successful adjudication or measured successful child path.
 - The two synthetic evidence documents are preserved in `fixtures/live/FL195-OP-HIS-01.json` and `fixtures/live/FL195-INSP-01.json`.
 - A code-level hypothesis for this disagreement is that validators named different authorised external sources in `responsible_org`, although neither source is a contractual responsible party. EventConsensus now compares the external cause/domain while still validating each source label independently. The focused Direct Mode case passes and GenVM lint passes; a new on-chain generation is needed to confirm whether this resolves live disagreement.
+
+### FL196 live rerun (Generation 10)
+
+- FL196 reused accepted five-minute agreement `MNT-TEST-2026-09:2`. Its event opened in `0x763d4fe219e4f2407c1bfb7fec89e8c14ced50de4eccc411d764d20fc2a72d3d`; operator and inspector evidence commits finalized in `0x1c4cb724267d3167bc99a27a4ff89f42c4ba1b5ad619da4823e3f6500ce2a4a0` and `0x38b953790d29191f0dbeb98cdd01662486792dceb0ecfd47d01d6d663a3678c6`.
+- Close finalized in `0x0686c5267bba824bfea43f2972dda5562f7bd2ac0a04eb555a4ea22ba2cf7f46`. Determine `0x4cf8ebfbc69ac8280fb3cae289562a94776565ef2474ee79fbbba5b2bbc6aa28` finalized with 5/5 votes revealed, three disagreements and one validator stopped after quorum. The leader proposed `POWER_UTILITY_FAILURE`, external responsibility, the record-only clause and a four-minute interval; the final event and consensus records remain empty, with no child transaction.
+- Generation 10 includes the external-source-label normalization, but FL196 still disagreed. This disproves the hypothesis as a sufficient fix; the rule is locally validated but has not resolved live model disagreement. The five-minute intake and close path itself completed as expected. Synthetic evidence remains in `fixtures/live/FL196-*.json`.
 ## Verified implementation and tests
 
 - Event intake now preserves accepted party origin and event-type claims, permits a bounded counterparty envelope challenge, and shares the widest accepted physical interval across linked agreements.
