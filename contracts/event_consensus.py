@@ -120,6 +120,37 @@ class EventConsensus(gl.contract.Contract):
 
         retrieved_ids = []
         retrieved_facts = {}
+        def normalize_finding(raw):
+            if not isinstance(raw,dict): return raw
+            finding = dict(raw)
+            scalar_fields = ('event_type','cause','cause_class','cause_code','responsible_domain','responsible_org','start_minute','end_minute','rationale')
+            for field in scalar_fields:
+                value = finding.get(field)
+                if isinstance(value,list):
+                    if len(value) == 1: finding[field] = value[0]
+                    elif field == 'responsible_org' and not value: finding[field] = ''
+            if finding.get('cause') != 'UNDETERMINED' and isinstance(finding.get('evidence_ids'),list):
+                starts = set()
+                ends = set()
+                for evidence_id in finding['evidence_ids']:
+                    for fact in retrieved_facts.get(evidence_id,[]):
+                        field = fact.get('field','').lower()
+                        is_start = any(token in field for token in ('start','begin','began'))
+                        is_end = any(token in field for token in ('restor','resum','recover','end','finish','clear','resolv','recommission'))
+                        if is_start == is_end: continue
+                        target = starts if is_start else ends
+                        for value in (fact.get('value'),fact.get('at')):
+                            if not isinstance(value,str) or 'T' not in value: continue
+                            try:
+                                parsed = datetime.fromisoformat(value.replace('Z','+00:00'))
+                                if parsed.tzinfo is not None: target.add(int(parsed.timestamp()//60))
+                            except Exception: continue
+                if len(starts) == 1 and len(ends) == 1:
+                    start = next(iter(starts)); end = next(iter(ends))
+                    if end > start:
+                        finding['start_minute'] = start
+                        finding['end_minute'] = end
+            return finding
         def assess():
             documents = []
             observed_types = []
@@ -161,7 +192,7 @@ class EventConsensus(gl.contract.Contract):
             if len(documents) < 2 or len(set(observed_orgs)) < 2: return uncertain('Insufficient independently usable evidence')
             if not any(kind in observed_types for kind in standards): return uncertain('Required evidence standard absent')
             raw = gl.nondet.exec_prompt(prompt + '\nUNTRUSTED EVIDENCE: ' + json.dumps(documents),response_format='json')
-            return json.dumps(raw) if isinstance(raw,dict) else raw
+            return json.dumps(normalize_finding(raw)) if isinstance(raw,dict) else raw
 
         def valid(leader_result):
             if not isinstance(leader_result,gl.vm.Return): return False

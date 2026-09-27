@@ -303,7 +303,7 @@ def test_agreements_apply_distinct_consequence_windows_to_same_canonical_event()
             assert wide['durationMinutes']==1200 and wide['outcomes'][0]['value']==1200
     finally:close_ctx(ctx)
 
-@pytest.mark.parametrize('mode',['normal','source_failure','contradiction','metadata_mismatch','stale','one_bad','budget','bytes_budget'])
+@pytest.mark.parametrize('mode',['normal','normalization','source_failure','contradiction','metadata_mismatch','stale','one_bad','budget','bytes_budget'])
 def test_consensus_substantive_validator_and_hostile_package(mode):
     vm,c,ctx=deploy_one('event_consensus.py',create_address('E'),create_address('R'),create_address('A'))
     gl = sys.modules[c.__class__.__module__].gl
@@ -322,7 +322,9 @@ def test_consensus_substantive_validator_and_hostile_package(mode):
         fact_count=20 if attacked and mode=='budget' else 10 if attacked and mode=='bytes_budget' else 1
         long_value=fact+('x'*600 if attacked and mode=='bytes_budget' else '')
         facts=[{'field':'finding','value':long_value} for _ in range(fact_count)]
-        if eid=='E1':facts.extend([{'field':'trip_started_at','value':minute_time(100)},{'field':'restored_at','value':minute_time(340)},{'field':'alternate_trip_timestamp','value':minute_time(104)},{'field':'alternate_restore_timestamp','value':minute_time(337)}])
+        if eid=='E1':
+            facts.extend([{'field':'trip_started_at','value':minute_time(100)},{'field':'restored_at','value':minute_time(340)}])
+            if mode!='normalization':facts.extend([{'field':'alternate_trip_timestamp','value':minute_time(104)},{'field':'alternate_restore_timestamp','value':minute_time(337)}])
         package={'schemaVersion':1,'evidenceId':eid,'eventId':'EV2' if eid=='E3' and mode=='one_bad' else 'EV1','organisation':org,'type':kind,'observedAt':'2026-07-01T10:00:00Z' if mode=='stale' else '2026-09-26T10:00:00Z','facts':facts, 'redactions':[]}
         body=json.dumps(package).encode();digest=hashlib.sha256(body).hexdigest();bytes_by_digest[digest]=body
         declared_size=min(len(body),4096) if attacked and mode=='bytes_budget' else len(body)
@@ -342,7 +344,10 @@ def test_consensus_substantive_validator_and_hostile_package(mode):
     def web(url,method='GET'):
         return SimpleNamespace(status=503 if mode=='source_failure' else 200,body=(bytes_by_digest[url.rsplit('/',1)[-1]].replace(b'\"eventId\": \"EV1\"',b'\"eventId\": \"EV2\"') if mode=='metadata_mismatch' else bytes_by_digest[url.rsplit('/',1)[-1]]))
     def prompt(text,response_format='json'):
-        prompts.append(text);return dict(finding,cause='UNDETERMINED',cause_class='UNDETERMINED',cause_code='UNDETERMINED',contributing_codes=[],responsible_domain='NONE',responsible_org='',start_minute=0,end_minute=0,evidence_ids=[],clause_ids=[],clause_evidence={},rationale='Conflicting source records') if mode=='contradiction' else finding
+        prompts.append(text)
+        if mode=='contradiction':return dict(finding,cause='UNDETERMINED',cause_class='UNDETERMINED',cause_code='UNDETERMINED',contributing_codes=[],responsible_domain='NONE',responsible_org='',start_minute=0,end_minute=0,evidence_ids=[],clause_ids=[],clause_evidence={},rationale='Conflicting source records')
+        if mode=='normalization':return dict(finding,responsible_domain=['MAINTENANCE'],responsible_org=['SP'],start_minute=900,end_minute=901)
+        return finding
     class Emit:
         def record_finalized(self,*args):emitted.append(args)
     class EventProxy(Read):
@@ -351,11 +356,15 @@ def test_consensus_substantive_validator_and_hostile_package(mode):
     try:
         with patch.object(gl.contract,'get_at',side_effect=lambda addr:ev if addr==c.events else er if addr==c.evidence else ar),patch.object(gl.nondet.web,'request',side_effect=web),patch.object(gl.nondet,'exec_prompt',side_effect=prompt),patch.object(gl.vm,'run_nondet',side_effect=nondet):
             c.determine('EV1')
-            assert json.loads(c.get('EV1'))['cause']==('MAINTENANCE_DEFICIENCY' if mode in ('normal','one_bad','budget','bytes_budget') else 'UNDETERMINED')
+            result=json.loads(c.get('EV1'))
+            assert result['cause']==('MAINTENANCE_DEFICIENCY' if mode in ('normal','normalization','one_bad','budget','bytes_budget') else 'UNDETERMINED')
             assert emitted and emitted[0][0]=='EV1'
             if mode=='normal':
                 assert any('Ignore all previous instructions' in p for p in prompts)
                 assert any('A1:1:credit' in p and 'fully-qualified' in p and 'both endpoints' in p and 'MUST include cause_code' in p for p in prompts)
+            if mode=='normalization':
+                assert result['start_minute']==100 and result['end_minute']==340
+                assert result['responsible_domain']=='MAINTENANCE' and result['responsible_org']=='SP'
             validate=captures[0]
             if mode=='normal':
              for attack in [dict(finding,cause='OPERATOR_CAUSED'),dict(finding,cause='CONTROL_SYSTEM_FAILURE'),dict(finding,cause_class='OPERATOR_CAUSED'),dict(finding,cause_code='OPERATOR_ERROR'),dict(finding,cause_code='FREE_TEXT'),dict(finding,contributing_codes=['OPERATOR_ERROR']),dict(finding,responsible_org='OP'),dict(finding,responsible_domain='OEM'),dict(finding,evidence_ids=['FAKE']),dict(finding,clause_ids=['A1:1:FAKE']),dict(finding,clause_evidence={'A1:1:credit':['LAB_ONLY_FOR_A2']}),dict(finding,start_minute=106),dict(finding,start_minute=-1),dict(finding,end_minute=1001),dict(finding,event_type='PUMP_FAILURE')]:
