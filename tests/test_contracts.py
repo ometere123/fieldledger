@@ -233,6 +233,22 @@ def test_evidence_admission_reserves_bounded_capacity_for_every_source():
             assert len(manifest['ids']) == 24 and len(manifest['digest']) == 64
     finally:close_ctx(ctx)
 
+def test_consensus_cause_classes_and_codes_are_bounded_and_consistent():
+    import ast
+    tree=ast.parse((ROOT/'event_consensus.py').read_text())
+    names={'CAUSE_DOMAINS','CAUSE_CLASSES','CAUSE_CODES','ALL_CAUSE_CODES'};namespace={}
+    for node in tree.body:
+        if isinstance(node,ast.Assign) and any(isinstance(target,ast.Name) and target.id in names for target in node.targets):
+            exec(compile(ast.Module(body=[node],type_ignores=[]),str(ROOT/'event_consensus.py'),'exec'),namespace)
+    domains=namespace['CAUSE_DOMAINS'];classes=namespace['CAUSE_CLASSES'];codes=namespace['CAUSE_CODES'];all_codes=namespace['ALL_CAUSE_CODES']
+    assert set(codes) == set(classes) == set(domains)
+    assert all(len(values)>0 and len(values)==len(set(values)) for values in codes.values())
+    assert set(code for values in codes.values() for code in values) <= set(all_codes)
+    assert classes['OPERATOR_CAUSED']=='OPERATOR_CAUSED' and domains['OPERATOR_CAUSED']==('OPERATOR',)
+    assert classes['THIRD_PARTY_DAMAGE']=='EXTERNAL_CAUSE' and domains['THIRD_PARTY_DAMAGE']==('EXTERNAL',)
+    assert codes['POWER_UTILITY_FAILURE']==('UTILITY_INTERRUPTION',)
+    assert codes['MAINTENANCE_DEFICIENCY']==('MECHANICAL_FAILURE','ELECTRICAL_FAILURE','INSTRUMENT_FAILURE','LUBRICATION_DEGRADATION','OVERDUE_MAINTENANCE')
+
 def test_multi_policy_effects_and_undetermined_gate():
     event={'id':'EV1','operator':'OP','openedMinute':0,'parties':['OP','SP'],'intervalStartMin':0,'intervalEndMax':1000,'links':[{'id':'SLA','version':1},{'id':'AVL','version':1},{'id':'OEM','version':1},{'id':'JV','version':1},{'id':'REF','version':1}], 'finalResult':json.dumps({'cause':'MAINTENANCE_DEFICIENCY','responsible_domain':'MAINTENANCE','start_minute':100,'end_minute':340,'excluded_clause_ids':[],'clause_ids':['SLA:1:credit','AVL:1:availability','OEM:1:warranty','JV:1:allocation','REF:1:record']})}
     terms={'SLA':{'agreement':'SLA','version':1,'accepted':True,'operator':'OP','counterparty':'SP','policy':json.loads(policy())},'AVL':{'agreement':'AVL','version':1,'accepted':True,'operator':'OP','counterparty':'SP','policy':{'type':'AVAILABILITY','mode':'OBSERVE','clauses':[{'id':'availability','cause':'MAINTENANCE_DEFICIENCY','metric':'AVAILABILITY_BPS','threshold':0,'rate':2,'cap':0,'text':'Quarter availability'}]}},'OEM':{'agreement':'OEM','version':1,'accepted':True,'operator':'OP','counterparty':'SP','policy':{'type':'WARRANTY','mode':'OBSERVE','clauses':[{'id':'warranty','cause':'MAINTENANCE_DEFICIENCY','metric':'WARRANTY_FLAG','threshold':0,'rate':0,'cap':1,'text':'Warranty referral'}]}},'JV':{'agreement':'JV','version':1,'accepted':True,'operator':'OP','counterparty':'SP','policy':{'type':'JV_ALLOCATION','mode':'ENFORCE','clauses':[{'id':'allocation','cause':'MAINTENANCE_DEFICIENCY','metric':'JV_SHARE_BPS','threshold':0,'rate':2500,'cap':2500,'text':'JV cost share'}]}},'REF':{'agreement':'REF','version':1,'accepted':True,'operator':'OP','counterparty':'SP','policy':{'type':'REFERENCE','mode':'OBSERVE','clauses':[{'id':'record','cause':'MAINTENANCE_DEFICIENCY','metric':'RECORD_ONLY','threshold':0,'rate':0,'cap':0,'text':'Reference only'}]}}}
@@ -300,7 +316,7 @@ def test_consensus_substantive_validator_and_hostile_package(mode):
         documents.append(json.dumps({'id':eid,'event':'EV1','organisation':org,'kind':kind,'digest':digest,'url':'https://gateway.example/v1/evidence/'+digest,'observedAt':package['observedAt'],'target':'','packageBytes':declared_size,'factCount':declared_facts,'admissibleFor':base['sourceScopes'][org]},sort_keys=True,separators=(',',':')))
     manifest={'ids':['E1','E2']+[e[0] for e in extra],'digest':hashlib.sha256(json.dumps(documents,separators=(',',':')).encode()).hexdigest()}
     ev=Read(get=lambda eid:json.dumps(base));er=Read(manifest=lambda eid:json.dumps(manifest),get=lambda eid:documents[manifest['ids'].index(eid)]);ar=Read(get_version=lambda aid,v:json.dumps(term))
-    finding={'event_type':'UNIT_TRIP','cause':'MAINTENANCE_DEFICIENCY','responsible_domain':'MAINTENANCE','responsible_org':'SP','start_minute':100,'end_minute':340,'evidence_ids':['E1','E2'],'clause_ids':['A1:1:credit'],'clause_evidence':{'A1:1:credit':['E1','E2']},'excluded_clause_ids':[],'rationale':'Independent trend and work order support service deficiency.'}
+    finding={'event_type':'UNIT_TRIP','cause':'MAINTENANCE_DEFICIENCY','cause_class':'MAINTENANCE_DEFICIENCY','cause_code':'LUBRICATION_DEGRADATION','contributing_codes':['LUBRICATION_DEGRADATION'],'responsible_domain':'MAINTENANCE','responsible_org':'SP','start_minute':100,'end_minute':340,'evidence_ids':['E1','E2'],'clause_ids':['A1:1:credit'],'clause_evidence':{'A1:1:credit':['E1','E2']},'excluded_clause_ids':[],'rationale':'Independent trend and work order support service deficiency.'}
     class Lazy:
         def __init__(self,v):self.value=v
         def get(self):return self.value
@@ -312,7 +328,7 @@ def test_consensus_substantive_validator_and_hostile_package(mode):
     def web(url,method='GET'):
         return SimpleNamespace(status=503 if mode=='source_failure' else 200,body=(bytes_by_digest[url.rsplit('/',1)[-1]].replace(b'\"eventId\": \"EV1\"',b'\"eventId\": \"EV2\"') if mode=='metadata_mismatch' else bytes_by_digest[url.rsplit('/',1)[-1]]))
     def prompt(text,response_format='json'):
-        prompts.append(text);return dict(finding,cause='UNDETERMINED',responsible_domain='NONE',responsible_org='',start_minute=0,end_minute=0,evidence_ids=[],clause_ids=[],clause_evidence={},rationale='Conflicting source records') if mode=='contradiction' else finding
+        prompts.append(text);return dict(finding,cause='UNDETERMINED',cause_class='UNDETERMINED',cause_code='UNDETERMINED',contributing_codes=[],responsible_domain='NONE',responsible_org='',start_minute=0,end_minute=0,evidence_ids=[],clause_ids=[],clause_evidence={},rationale='Conflicting source records') if mode=='contradiction' else finding
     class Emit:
         def record_finalized(self,*args):emitted.append(args)
     class EventProxy(Read):
@@ -326,7 +342,7 @@ def test_consensus_substantive_validator_and_hostile_package(mode):
             if mode=='normal': assert any('Ignore all previous instructions' in p for p in prompts)
             validate=captures[0]
             if mode=='normal':
-             for attack in [dict(finding,cause='OPERATOR_CAUSED'),dict(finding,cause='CONTROL_SYSTEM_FAILURE'),dict(finding,responsible_org='OP'),dict(finding,responsible_domain='OEM'),dict(finding,evidence_ids=['FAKE']),dict(finding,clause_ids=['A1:1:FAKE']),dict(finding,clause_evidence={'A1:1:credit':['LAB_ONLY_FOR_A2']}),dict(finding,start_minute=101),dict(finding,start_minute=-1),dict(finding,end_minute=1001),dict(finding,event_type='PUMP_FAILURE')]:
+             for attack in [dict(finding,cause='OPERATOR_CAUSED'),dict(finding,cause='CONTROL_SYSTEM_FAILURE'),dict(finding,cause_class='OPERATOR_CAUSED'),dict(finding,cause_code='OPERATOR_ERROR'),dict(finding,cause_code='FREE_TEXT'),dict(finding,contributing_codes=['OPERATOR_ERROR']),dict(finding,responsible_org='OP'),dict(finding,responsible_domain='OEM'),dict(finding,evidence_ids=['FAKE']),dict(finding,clause_ids=['A1:1:FAKE']),dict(finding,clause_evidence={'A1:1:credit':['LAB_ONLY_FOR_A2']}),dict(finding,start_minute=101),dict(finding,start_minute=-1),dict(finding,end_minute=1001),dict(finding,event_type='PUMP_FAILURE')]:
                 assert not validate(gl.vm.Return(json.dumps(attack)))
              assert validate(gl.vm.Return(json.dumps(finding)))
              with patch.object(gl.nondet,'exec_prompt',return_value=dict(finding,cause='CONTROL_SYSTEM_FAILURE')):
