@@ -19,3 +19,4 @@ artifacts/
 .vercel
 .env.*
 !.env.example
+tmp-rubric.txt
